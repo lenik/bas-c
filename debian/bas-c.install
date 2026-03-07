@@ -1,0 +1,4 @@
+usr/bin/ppid
+usr/share/man/man1/ppid.1
+usr/share/bash-completion/completions/ppid
+usr/lib/*/libbas-bash.so*

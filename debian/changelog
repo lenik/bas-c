@@ -1,0 +1,13 @@
+bas-c (1.0.0) testing; urgency=medium
+
+  * Add README.md and refine Meson/Debian packaging.
+
+ -- Lenik (谢继雷) <lenik@bodz.net>  Mon, 09 Mar 2026 17:31:26 +0800
+
+bas-c (0.0.1) testing; urgency=medium
+
+  * Initial release.
+  * libbas-c: shared library, headers, docs.
+  * bas-c: ppid app, man page, bash completion.
+
+ -- Lenik (谢继雷) <lenik@bodz.net>  Sat, 07 Mar 2025 12:00:00 +0800

@@ -1,27 +1,50 @@
-Source: libbas-c
+Source: bas-c
 Section: libs
 Priority: optional
 Maintainer: Lenik (谢继雷) <lenik@bodz.net>
-Build-Depends: debhelper (>= 9)
-Standards-Version: 3.9.4
+Rules-Requires-Root: no
+Build-Depends:
+ debhelper-compat (= 13),
+ meson,
+ pkg-config,
+ bash-builtins,
+ libglib2.0-dev,
+ libcurl4-openssl-dev,
+ libssl-dev,
+ zlib1g-dev,
+ libicu-dev,
+Standards-Version: 4.7.2
 Homepage: http://uni.bodz.net/lib/libbas-c
 Vcs-Git: git://git.bodz.net/uni.git
 Vcs-Browser: http://git.bodz.net/uni/lib/libbas-c
 
-Package: libbas-c
+Package: libbas-c1
+Section: libs
 Architecture: any
 Depends:
-    libglib2.0-0,
-    ${misc:Depends}
-Description: bas framework for C.
-    The bas prog framework.
+ ${shlibs:Depends},
+ ${misc:Depends},
+Description: C base library (runtime)
+ Shared library providing base utilities: CLI (program/options), logging,
+ process helpers, I/O, and bash loadable builtin support.
 
-Package: libbas-c-dbg
+Package: libbas-c-dev
+Section: libdevel
 Architecture: any
-Section: debug
-Priority: extra
 Depends:
-    libbas-c (= ${binary:Version}),
-    libglib2.0-0-dbg
-Description: Debugging symbols for the libbas-c library.
-    The bas prog framework.
+ libbas-c1 (= ${binary:Version}),
+ ${misc:Depends},
+Description: C base library (development)
+ Headers and documentation for libbas-c.
+ This package is needed to build programs that use libbas-c.
+
+Package: bas-c
+Section: utils
+Architecture: any
+Depends:
+ libbas-c1 (= ${binary:Version}),
+ ${shlibs:Depends},
+ ${misc:Depends},
+Description: Command-line tools from bas-c
+ Individual applications built on libbas-c:
+  * ppid - print parent process information
