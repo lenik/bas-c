@@ -15,7 +15,7 @@
 #if !defined(LOGGER_NAME) && !defined(LOGGER)
 #error "LOGGER_NAME or LOGGER must be defined"
 #endif
-#include "../log/uselogger.h"
+#include "../log/uselog.h"
 
 /* .section. options */
 

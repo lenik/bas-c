@@ -21,7 +21,7 @@
 #include "stackdump.h"
 
 #define LOGGER_NAME dbg
-#include "../log/uselogger.h"
+#include "../log/uselog.h"
 logger_t mon_logger;
 
 #include <ctype.h>

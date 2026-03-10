@@ -48,8 +48,22 @@ bash_dep_1 = declare_dependency(
 
 # zlib is used for decompression, but we'll parse ZIP manually
 
-# ppid.c has main() and is a standalone executable, not library code
 c_sources = files(
+    'src/base/stdio.c',
+    'src/base/str.c',
+    'src/base/string_list.c',
+    'src/base/wstring.c',
+    'src/cli/args.c',
+    'src/cli/opt_parser.c',
+    'src/cli/program.c',
+    'src/io/file.c',
+    'src/io/fileent_list.c',
+    'src/io/path.c',
+    'src/io/wfileent_list.c',
+    'src/locale/unicode.c',
+    'src/log/log.c',
+    'src/log/logger.c',
+    'src/log/syslog.c',
     'src/proc/dbgaction.c',
     'src/proc/dbgthread.c',
     'src/proc/env.c',
@@ -57,20 +71,6 @@ c_sources = files(
     'src/proc/format_gdb.c',
     'src/proc/pid.c',
     'src/proc/stackdump.c',
-    'src/io/file.c',
-    'src/io/fileent_list.c',
-    'src/io/path.c',
-    'src/io/wfileent_list.c',
-    'src/base/str.c',
-    'src/base/stdio.c',
-    'src/base/string_list.c',
-    'src/base/wstring.c',
-    'src/cli/opt_parser.c',
-    'src/cli/args.c',
-    'src/cli/program.c',
-    'src/log/logger.c',
-    'src/log/log.c',
-    'src/log/syslog.c',
 )
 
 # Executable (optional wx media/webview only when found)
@@ -99,7 +99,7 @@ bas_bash = shared_library('bas-bash',
   dependencies : [bash_dep_1],
   include_directories : exe_inc,
   version : meson.project_version(),
-  soversion : '1',
+  soversion : meson.project_version().split('.')[0],
   install : true,
 )
 
@@ -135,16 +135,34 @@ foreach app_src : app_sources
   )
 endforeach
 
-# ---- Man pages (install to mandir) ----
-install_man('app/ppid.1')
+# Manpages: app/*.1 -> install to mandir
+find_man = run_command('find', 'app', '-maxdepth', '1', '-name', '*.1', check : false)
+if find_man.returncode() == 0
+    foreach line : find_man.stdout().strip().split('\n')
+        if line == ''
+            continue
+        endif
+        install_man(line)
+    endforeach
+endif
 
 # ---- Bash completion (install to datadir/bash-completion/completions) ----
-install_data(
-  'app/ppid.bash',
-  rename : 'ppid',
-  install_dir : get_option('datadir') / 'bash-completion' / 'completions',
-  install_mode : 'rw-r--r--',
-)
+find_bash = run_command('find', 'app', '-maxdepth', '1', '-name', '*.bash', check : false)
+app_bash_list = []
+if find_bash.returncode() == 0
+    foreach line : find_bash.stdout().strip().split('\n')
+        if line == ''
+            continue
+        endif
+        completion_name = fs.replace_suffix(line.split('/')[-1], '')
+        install_data(
+            line,
+            rename : completion_name,
+            install_dir : get_option('datadir') / 'bash-completion' / 'completions',
+            install_mode : 'rw-r--r--',
+        )
+    endforeach
+endif
 
 # ---- Headers for libbas-c package (includedir/bas-c) ----
 find_other_cmd = run_command('find', '.',

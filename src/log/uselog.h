@@ -12,7 +12,7 @@ extern "C" {
 #endif
 
 #ifndef LOGGER
-#define LOGGER LOGGER_NAME##_logger
+#define LOGGER LOGGER_NAME ## _logger
 #endif
 
 // Forward declaration of default logger instance

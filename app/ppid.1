@@ -1,0 +1,54 @@
+.TH PPID 1 "March 2026" "bas-c" "User Commands"
+.SH NAME
+ppid \- print parent process information
+.SH SYNOPSIS
+.B ppid
+.RI [ options ] " [PID ...]"
+.SH DESCRIPTION
+.B ppid
+prints information about the parent process (or processes) of the given
+.IR PID (s).
+If no PID is specified, it operates on the current process.
+.PP
+By default,
+.B ppid
+prints the numeric PID followed by the command line of the parent
+process, as obtained from
+.BR /proc .
+With the
+.B -a
+option it walks the process tree upwards, printing information for each
+ancestor until the root of the tree is reached.
+.SH OPTIONS
+.TP
+.B -s ,\ --self
+Show information about the specified process itself instead of its
+parent. When no PID is given, this means the current process.
+.TP
+.B -a ,\ --all
+Show information for all parent processes, recursively walking up the
+process tree.
+.TP
+.B -q ,\ --quiet
+Produce less verbose log output.
+.TP
+.B -v ,\ --verbose
+Produce more verbose log output.
+.TP
+.B --version
+Show version information and exit.
+.SH EXIT STATUS
+The
+.B ppid
+utility exits with status 0 on success. A non-zero exit status
+indicates an error, such as an invalid PID or failure to read
+information from
+.BR /proc .
+.SH NOTES
+This utility relies on the Linux
+.BR /proc
+filesystem and is therefore specific to Linux systems.
+.SH SEE ALSO
+.BR ps (1),
+.BR pstree (1),
+.BR proc (5)
