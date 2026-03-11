@@ -1,10 +1,10 @@
-#include <assert.h>
-#include <stdio.h>
-
-#include <stdlib.h>                     /* malloc, realloc, free */
-#include <string.h>                     /* memcpy */
 #include "file.h"
 #include "../base/stdio.h"
+
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>                     /* malloc, realloc, free */
+#include <string.h>                     /* memcpy */
 
 #define BLOCK_SIZE 64
 

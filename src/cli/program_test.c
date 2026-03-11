@@ -1,4 +1,5 @@
 #include "program.h"
+#include <log/uselog.h>
 
 static GOptionEntry options[] = {
     { "force",     'f', 0, G_OPTION_ARG_NONE, &opt_force,
@@ -19,11 +20,25 @@ static GOptionEntry options[] = {
     { NULL },
 };
 
+gboolean parse_option(const char *opt, const char *val, parse_options_ctx *ctx) {
+    return parse_option_defaults(opt, val, ctx);
+}
+
 int main(int argc, char **argv) {
     program_title = "Show line numbers";
     program_help_args = "FILES";
 
-    if (! parse_options(options, &argc, &argv)) {
+    logger_t *loggers[] = { &LOGGER, 0 };
+
+    parse_options_ctx ctx = {
+        .argc = argc,
+        .argv = argv,
+        .data = NULL,
+        .error = NULL,
+        .loggers = loggers,
+    };
+
+    if (! parse_options(options, &ctx)) {
         logerror("Illegal cmdline syntax.");
         return 1;
     }
@@ -34,9 +49,4 @@ int main(int argc, char **argv) {
     }
 
     return 0;
-}
-
-gboolean parse_option(const char *opt, const char *val,
-                      gpointer data, GError **err) {
-    return _parse_option(opt, val, data, err);
 }

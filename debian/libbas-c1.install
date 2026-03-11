@@ -1,2 +1,2 @@
-usr/lib/*/libbas-c.so*
-usr/lib/*/libbas-bash.so*
+usr/lib/*/libbas-c.so.*
+usr/lib/*/libbas-bash.so.*

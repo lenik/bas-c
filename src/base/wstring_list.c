@@ -1,7 +1,9 @@
 #include "wstring_list.h"
+
 #include "wstring.h"
-#include <stdlib.h>
+
 #include <stddef.h>
+#include <stdlib.h>
 #include <unistd.h>  // for ssize_t
 
 #define WSTRING_LIST_DEFAULT_CAPACITY 16

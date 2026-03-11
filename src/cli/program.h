@@ -1,5 +1,5 @@
-#ifndef __BAS_CLI_H
-#define __BAS_CLI_H
+#ifndef __CLI_PROGRAM_H
+#define __CLI_PROGRAM_H
 
 #include <glib.h>
 
@@ -23,7 +23,7 @@
     { longopt, shortopt,                        \
             G_OPTION_FLAG_NO_ARG,               \
             G_OPTION_ARG_CALLBACK,              \
-            &parse_option,                      \
+            &_g_parse_option,                   \
             description,                        \
             NULL,                               \
             }
@@ -32,12 +32,16 @@
     { longopt, shortopt,                        \
             0,                                  \
             G_OPTION_ARG_CALLBACK,              \
-            &parse_option,                      \
+            &_g_parse_option,                   \
             description,                        \
             arg_description,                    \
             }
 
 #define OPTZ G_OPTION_ENTRY_NULL
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern const char *program_title;
 extern const char *program_help_args;
@@ -45,13 +49,21 @@ extern const char *program_help_args;
 extern bool opt_error_continue;
 extern bool opt_force;
 
-bool parse_options(GOptionEntry *options, int *_argc, char ***_argv);
+typedef struct {
+    int argc;
+    char **argv;
+    gpointer data;
+    GError *error;
+    logger_t **loggers;
+} parse_options_ctx;
 
-gboolean parse_option(const char *opt, const char *val,
-                      gpointer data, GError **err);
+bool parse_options(GOptionEntry *options, parse_options_ctx *ctx);
 
-gboolean _parse_option(const char *opt, const char *val,
-                       gpointer data, GError **err);
+gboolean _g_parse_option(const char *opt, const char *val, gpointer data, GError **err);
+
+gboolean parse_option(const char *opt, const char *val, parse_options_ctx *ctx);
+
+gboolean parse_option_defaults(const char *opt, const char *val, parse_options_ctx *ctx);
 
 typedef bool (*file_handler)(const char *path, FILE *in, void *data);
 
@@ -83,4 +95,8 @@ bool process_files(char **paths, const char *open_mode,
 #define F_EVAL_RETZ(expr) F_EVAL_RET_EQ(expr, 0)
 #define F_EVAL_RETNZ(expr) F_EVAL_RET_NEQ(expr, 0)
 
+#ifdef __cplusplus
+}
 #endif
+
+#endif // __CLI_PROGRAM_H

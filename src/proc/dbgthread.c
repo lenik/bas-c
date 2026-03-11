@@ -14,15 +14,16 @@
 
 #include "dbgthread.h"
 
-#include "../cli/args.h"
 #include "dbgaction.h"
 #include "format_backtrace.h"
 #include "format_gdb.h"
 #include "stackdump.h"
 
+#include "../cli/args.h"
+
 #define LOGGER_NAME dbg
 #include "../log/uselog.h"
-logger_t mon_logger;
+logger_t dbg_logger;
 
 #include <ctype.h>
 #include <strings.h>

@@ -1,3 +1,5 @@
 usr/include/bas/
 usr/share/doc/libbas-c/
+usr/lib/*/libbas-c.so
+usr/lib/*/libbas-bash.so
 usr/lib/*/pkgconfig/bas-c.pc

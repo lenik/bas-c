@@ -7,37 +7,6 @@
 extern "C" {
 #endif
 
-// ANSI color codes
-#define COLOR_RESET   "\033[0m"
-#define COLOR_ERROR   "\033[1;31m"  // Bright red
-#define COLOR_WARN    "\033[1;33m"  // Bright yellow
-#define COLOR_MESG    "\033[0m"     // Default/white
-#define COLOR_INFO    "\033[1;32m"  // Bright green
-#define COLOR_LOG     "\033[1;37m"  // Gray
-#define COLOR_DEBUG   "\033[1;90m"  // Light gray
-#define COLOR_TRACE   "\033[1;90m"  // Light gray
-
-#ifdef LOGGER_NAME
-#ifndef LOGGER
-#define LOGGER LOGGER_NAME##_logger
-#endif
-#endif
-
-#define TOSTRING(x) #x
-#ifdef LOGGER
-logger_t LOGGER = {
-    .level = 1,
-    .level_default = 1,
-    .header = "[" TOSTRING(LOGGER_NAME) "]",
-    .color_error = COLOR_ERROR,
-    .color_warn = COLOR_WARN,
-    .color_mesg = COLOR_MESG,
-    .color_info = COLOR_INFO,
-    .color_log = COLOR_LOG,
-    .color_debug = COLOR_DEBUG,
-};
-#endif
-
 void logger_set_level(logger_t* logger, int value) {
     if (logger) {
         logger->level = value;

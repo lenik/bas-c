@@ -1,7 +1,8 @@
 #include "string_list.h"
+
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stddef.h>
 #include <unistd.h>  // for ssize_t
 
 #define STRING_LIST_DEFAULT_CAPACITY 16

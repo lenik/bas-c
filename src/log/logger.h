@@ -2,7 +2,6 @@
 #define LOGGER_H
 
 #include <stdarg.h>
-#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {

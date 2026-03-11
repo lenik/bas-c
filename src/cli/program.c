@@ -3,6 +3,7 @@
 #include "../base/stdio.h"
 #include "../base/str.h"
 #include "../log/log.h"
+#include "../log/logger.h"
 
 #include <sys/types.h>
 
@@ -19,35 +20,58 @@
 const char *program_title = "PROGRAM";
 const char *program_help_args = "ARGUMENTS";
 
-bool parse_options(GOptionEntry *options, int *_argc, char ***_argv) {
-    int argc = *_argc;
-    char **argv = *_argv;
-
+bool parse_options(GOptionEntry *options, parse_options_ctx *ctx) {
     GError *gerr = NULL;
     GOptionContext *opts;
     int err;
 
     opts = g_option_context_new(program_help_args);
-    g_option_context_add_main_entries(opts,
-                                      options,
-                                      NULL /* translation-domain */
-                                      );
 
-    if (! g_option_context_parse(opts, &argc, &argv, &gerr)) {
-        log_err("Couldn't parse options: %s", gerr->message);
+    GOptionGroup *main_group = g_option_group_new(
+        "main", "Main options", 
+        NULL, ctx, NULL);
+
+    g_option_group_add_entries(main_group, options);
+
+    g_option_context_set_main_group(opts, main_group);
+
+    if (! g_option_context_parse(opts, &ctx->argc, &ctx->argv, &gerr)) {
+        errorf("Couldn't parse options: %s\n", gerr->message);
+        g_option_context_free(opts);
         return FALSE;
     }
 
     g_option_context_free(opts);
-    *_argc = argc;
-    *_argv = argv;
     return TRUE;
 }
 
-gboolean _parse_option(const char *opt,
+gboolean _g_parse_option(const char *opt, const char *val, 
+                       gpointer data, GError **err) {
+    parse_options_ctx *ctx = (parse_options_ctx *)data;
+    if (ctx == NULL) {
+        errorf("parse_options_ctx is NULL\n");
+        return FALSE;
+    } else {
+        // errorf("ctx: %p\n", ctx);
+        // errorf("ctx: argc=%d\n", ctx->argc);
+        // for (int i = 0; i < ctx->argc; i++) {
+        //     errorf("ctx: argv[%d]=%s\n", i, ctx->argv[i]);
+        // }
+    }
+    return parse_option(opt, val, ctx);
+}
+
+__attribute__((weak))
+gboolean parse_option(const char *opt,
                        const char *val,
-                       gpointer data,
-                       GError **err) {
+                       parse_options_ctx *ctx) {
+    logwarn_fmt("parse_option() is not implemented");
+    return parse_option_defaults(opt, val, ctx);
+}
+
+gboolean parse_option_defaults(const char *opt,
+                       const char *val,
+                       parse_options_ctx *ctx) {
     assert(*opt == '-');
     opt++;
 
@@ -72,6 +96,9 @@ gboolean _parse_option(const char *opt,
     case 'q':
         if (shortopt || streq(opt, "quiet")) {
             log_level--;
+            for (logger_t **logger = ctx->loggers; *logger; logger++) {
+                logger_less(*logger);
+            }
             return true;
         }
         break;
@@ -79,6 +106,9 @@ gboolean _parse_option(const char *opt,
     case 'v':
         if (shortopt || streq(opt, "verbose")) {
             log_level++;
+            for (logger_t **logger = ctx->loggers; *logger; logger++) {
+                logger_more(*logger);
+            }
             return true;
         }
         if (streq(opt, "version")) {

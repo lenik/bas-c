@@ -1,9 +1,9 @@
 #ifndef CLI_PARSER_H
 #define CLI_PARSER_H
 
+#include "../util/prefix_map.h"
+
 #include <stdbool.h>
-#include <stdio.h>
-#include "prefix_map.h"
 
 #ifdef __cplusplus
 extern "C" {

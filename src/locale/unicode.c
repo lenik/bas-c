@@ -1,11 +1,11 @@
 #include "unicode.h"
 
-#include <stdlib.h>
-#include <string.h>
-
 #include <unicode/ucnv.h>
 #include <unicode/ucnv_err.h>
 #include <unicode/ustring.h>
+
+#include <stdlib.h>
+#include <string.h>
 
 int utf8_decode_code_point(const uint8_t* ptr, const uint8_t* end, int* bytes_consumed) {
     if (bytes_consumed) *bytes_consumed = 0;

@@ -1,10 +1,13 @@
 #include "cli_parser.h"
+
 #include "args.h"
-#include "prefix_map.h"
+
+#include "../util/prefix_map.h"
+
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 #define INITIAL_HANDLERS_CAPACITY 16
 

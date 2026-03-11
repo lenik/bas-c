@@ -2,6 +2,8 @@
 
 #include "logger.h"
 
+#include <sys/cdefs.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -12,7 +14,8 @@ extern "C" {
 #endif
 
 #ifndef LOGGER
-#define LOGGER LOGGER_NAME ## _logger
+#define __CONCAT_EVAL(x, y) __CONCAT(x, y)
+#define LOGGER __CONCAT_EVAL(LOGGER_NAME, _logger)
 #endif
 
 // Forward declaration of default logger instance

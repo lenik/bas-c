@@ -3,11 +3,11 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#define LOG_IDENT "ppid"
 #include <base/str.h>
 #include <cli/program.h>
-#include <log/log.h>
+#include <log/uselog.h>
 #include <proc/pid.h>
+#include <proc/stackdump.h>
 
 static GOptionEntry options[] = {
     OPTION('s', "self", "Show self process"),
@@ -27,8 +27,7 @@ pid_t opt_pid = (pid_t) 0;
 
 void dump(pid_t pid);
 
-gboolean parse_option(const char *_opt, const char *val,
-                      gpointer data, GError **err) {
+gboolean parse_option(const char *_opt, const char *val, parse_options_ctx *ctx) {
     const char *opt = _opt;
 
     bool shortopt = opt++[1] != '-';
@@ -51,20 +50,34 @@ gboolean parse_option(const char *_opt, const char *val,
         break;
     }
 
-    return _parse_option(_opt, val, data, err);
+    return parse_option_defaults(_opt, val, ctx);
 }
 
 int main(int argc, char **argv) {
     pid_t start;
     
+    // stackdump_install_crash_handler(&stackdump_color_schema_default);
+    // stackdump_set_interactive(1);
+
     program_title = "Print parent process(-es) information";
     program_help_args = "[PID]";
 
-    if (! parse_options(options, &argc, &argv))
+    extern logger_t bas_logger;
+    logger_t *loggers[] = { &bas_logger, &LOGGER, 0 };
+
+    parse_options_ctx ctx = {
+        .argc = argc,
+        .argv = argv,
+        .data = NULL,
+        .error = NULL,
+        .loggers = loggers,
+    };
+
+    if (! parse_options(options, &ctx))
         return 1;
 
-    argc--;
-    argv++;
+    argc = ctx.argc - 1;
+    argv = ctx.argv + 1;
 
     if (argc > 0)
         /* for each arg */
@@ -72,19 +85,19 @@ int main(int argc, char **argv) {
             char *pidstr = *argv++;
             start = strtol(pidstr, NULL, 0);
             if (start == (pid_t) 0) {
-                log_err("Bad pid: %s", pidstr);
+                logerror_fmt("Bad pid: %s", pidstr);
                 continue;
             }
             
             if (! opt_self) {
                 start = getppidof(start);
                 if (start == (pid_t) 0) {
-                    log_warn("Maybe root process: %s", pidstr);
+                    logwarn_fmt("Maybe root process: %s", pidstr);
                     continue;
                 }
             }
             
-            log_info("Start-PID: %d", start);
+            loginfo_fmt("Start-PID: %d", start);
             dump(start);
         }
     else {
@@ -93,7 +106,7 @@ int main(int argc, char **argv) {
         if (! opt_self) {
             start = getppidof(start);
             if (start == (pid_t) 0) {
-                log_err("Failed to get the parent process for %d", getpid());
+                logerror_fmt("Failed to get the parent process for %d", getpid());
                 return 1;
             }
         }

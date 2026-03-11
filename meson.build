@@ -48,11 +48,14 @@ bash_dep_1 = declare_dependency(
 # zlib is used for decompression, but we'll parse ZIP manually
 
 c_sources = files(
+    'src/module.c',
     'src/base/stdio.c',
     'src/base/str.c',
     'src/base/string_list.c',
     'src/base/wstring.c',
+    'src/base/wstring_list.c',
     'src/cli/args.c',
+    'src/cli/cli_parser.c',
     'src/cli/opt_parser.c',
     'src/cli/program.c',
     'src/io/file.c',
@@ -70,6 +73,7 @@ c_sources = files(
     'src/proc/format_gdb.c',
     'src/proc/pid.c',
     'src/proc/stackdump.c',
+    'src/util/prefix_map.c',
 )
 
 # Executable (optional wx media/webview only when found)
@@ -87,17 +91,22 @@ lib_bas_c = library(
     dependencies: exe_deps,
     include_directories: exe_inc,
     c_args: c_nowarn + ['-DLOGGER_NAME=bas'],
+    override_options: ['b_lundef=false'], # Allows undefined symbols at link time
     version: meson.project_version(),
     soversion: '1',
     install: true,
+)
+
+bas_c_dep = declare_dependency(
+    link_with: lib_bas_c,
+    include_directories: exe_inc
 )
 
 # Bash loadable: libbas-bash (bb-util)
 bas_bash = shared_library(
     'bas-bash',
     'src/bash/bb-util.c',
-    link_with: lib_bas_c,
-    dependencies: [bash_dep_1],
+    dependencies: [bash_dep_1, bas_c_dep],
     include_directories: exe_inc,
     version: meson.project_version(),
     soversion: meson.project_version().split('.')[0],
@@ -141,8 +150,8 @@ foreach app_src : app_sources
     executable(
         app_name,
         app_src,
-        link_with: lib_bas_c,
-        dependencies: exe_deps,
+        'src/module.c',
+        dependencies: exe_deps + [bas_c_dep],
         include_directories: exe_inc,
         c_args: c_nowarn + ['-DLOGGER_NAME=' + app_name],
         install: true,
@@ -157,7 +166,7 @@ if find_man.returncode() == 0
         if line == ''
             continue
         endif
-        install_man(man_page)
+        install_man(line)
     endforeach
 endif
 
@@ -182,7 +191,7 @@ endif
 # ---- Headers for libbas-c package (includedir/bas-c) ----
 find_other_cmd = run_command(
     'find',
-    '.',
+    'src',
     '-name', '*.h',
     '-o',
     '-name', '*.hpp',
@@ -261,9 +270,10 @@ foreach test_rel_path : all_test_files
     test_exe = executable(
         test_name,
         all_sources,
+        'src/module.c',
         include_directories: exe_inc,
-        dependencies: exe_deps,
-        c_args: c_nowarn + ['-DLOGGER_NAME=' + test_name],
+        dependencies: exe_deps + [bas_c_dep],
+        c_args: c_nowarn + ['-DLOGGER_NAME=test'],
     )
 
     # Register the test with meson

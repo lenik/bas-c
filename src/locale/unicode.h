@@ -1,8 +1,8 @@
 #ifndef UTIL_UNICODE_H
 #define UTIL_UNICODE_H
 
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #include <unicode/utypes.h>   /* UChar, UChar32, UErrorCode */
 
