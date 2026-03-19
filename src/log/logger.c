@@ -44,7 +44,7 @@ void logger_error(const logger_t* logger, const char* message) {
 
 void logger_warn(const logger_t* logger, const char* message) {
     if (!logger) return;
-    if (logger->level >= 0) {
+    if (logger->level >= LOG_LEVEL_WARN) {
         fprintf(stderr, "%s%s WARN: %s%s\n", 
                 logger->color_warn, logger->header, message, logger->color_reset);
     }
@@ -52,7 +52,7 @@ void logger_warn(const logger_t* logger, const char* message) {
 
 void logger_mesg(const logger_t* logger, const char* message) {
     if (!logger) return;
-    if (logger->level >= 1) {
+    if (logger->level >= LOG_LEVEL_MESG) {
         printf("%s%s %s%s\n", 
                logger->color_mesg, logger->header, message, logger->color_reset);
     }
@@ -60,7 +60,7 @@ void logger_mesg(const logger_t* logger, const char* message) {
 
 void logger_info(const logger_t* logger, const char* message) {
     if (!logger) return;
-    if (logger->level >= 2) {
+    if (logger->level >= LOG_LEVEL_INFO) {
         printf("%s%s INFO: %s%s\n", 
                logger->color_info, logger->header, message, logger->color_reset);
     }
@@ -68,7 +68,7 @@ void logger_info(const logger_t* logger, const char* message) {
 
 void logger_log(const logger_t* logger, const char* message) {
     if (!logger) return;
-    if (logger->level >= 3) {
+    if (logger->level >= LOG_LEVEL_LOG) {
         printf("%s%s LOG: %s%s\n", 
                logger->color_log, logger->header, message, logger->color_reset);
     }
@@ -76,7 +76,7 @@ void logger_log(const logger_t* logger, const char* message) {
 
 void logger_debug(const logger_t* logger, const char* message) {
     if (!logger) return;
-    if (logger->level >= 4) {
+    if (logger->level >= LOG_LEVEL_DEBUG) {
         printf("%s%s DEBUG: %s%s\n", 
                logger->color_debug, logger->header, message, logger->color_reset);
     }
@@ -95,7 +95,7 @@ void logger_error_fmt(const logger_t* logger, const char* format, ...) {
 
 void logger_warn_fmt(const logger_t* logger, const char* format, ...) {
     if (!logger) return;
-    if (logger->level >= 0) {
+    if (logger->level >= LOG_LEVEL_WARN) {
         va_list args;
         va_start(args, format);
         fprintf(stderr, "%s%s WARN: ", logger->color_warn, logger->header);
@@ -107,7 +107,7 @@ void logger_warn_fmt(const logger_t* logger, const char* format, ...) {
 
 void logger_mesg_fmt(const logger_t* logger, const char* format, ...) {
     if (!logger) return;
-    if (logger->level >= 1) {
+    if (logger->level >= LOG_LEVEL_MESG) {
         va_list args;
         va_start(args, format);
         printf("%s%s ", logger->color_mesg, logger->header);
@@ -119,7 +119,7 @@ void logger_mesg_fmt(const logger_t* logger, const char* format, ...) {
 
 void logger_info_fmt(const logger_t* logger, const char* format, ...) {
     if (!logger) return;
-    if (logger->level >= 2) {
+    if (logger->level >= LOG_LEVEL_INFO) {
         va_list args;
         va_start(args, format);
         printf("%s%s INFO: ", logger->color_info, logger->header);
@@ -131,7 +131,7 @@ void logger_info_fmt(const logger_t* logger, const char* format, ...) {
 
 void logger_log_fmt(const logger_t* logger, const char* format, ...) {
     if (!logger) return;
-    if (logger->level >= 3) {
+    if (logger->level >= LOG_LEVEL_LOG) {
         va_list args;
         va_start(args, format);
         printf("%s%s LOG: ", logger->color_log, logger->header);
@@ -143,7 +143,7 @@ void logger_log_fmt(const logger_t* logger, const char* format, ...) {
 
 void logger_debug_fmt(const logger_t* logger, const char* format, ...) {
     if (!logger) return;
-    if (logger->level >= 4) {
+    if (logger->level >= LOG_LEVEL_DEBUG) {
         va_list args;
         va_start(args, format);
         printf("%s%s DEBUG: ", logger->color_debug, logger->header);
@@ -155,7 +155,7 @@ void logger_debug_fmt(const logger_t* logger, const char* format, ...) {
 
 void logger_trace_fmt(const logger_t* logger, const char* format, ...) {
     if (!logger) return;
-    if (logger->level >= 5) {
+    if (logger->level >= LOG_LEVEL_TRACE) {
         va_list args;
         va_start(args, format);
         printf("%s%s TRACE: ", logger->color_trace, logger->header);

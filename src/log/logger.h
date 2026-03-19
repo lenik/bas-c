@@ -3,6 +3,16 @@
 
 #include <stdarg.h>
 
+enum {
+    LOG_LEVEL_ERROR = -1,
+    LOG_LEVEL_WARN = 0,
+    LOG_LEVEL_MESG = 1,
+    LOG_LEVEL_INFO = 2,
+    LOG_LEVEL_LOG = 3,
+    LOG_LEVEL_DEBUG = 4,
+    LOG_LEVEL_TRACE = 5,
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
