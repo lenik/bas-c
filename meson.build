@@ -46,34 +46,35 @@ bash_dep_1 = declare_dependency(
 )
 
 # zlib is used for decompression, but we'll parse ZIP manually
+c_args = c_nowarn + ['-DLOGGER_NAME=bas']
 
 c_sources = files(
     'src/module.c',
-    'src/base/stdio.c',
-    'src/base/str.c',
-    'src/base/string_list.c',
-    'src/base/wstring.c',
-    'src/base/wstring_list.c',
-    'src/cli/args.c',
-    'src/cli/cli_parser.c',
-    'src/cli/opt_parser.c',
-    'src/cli/program.c',
-    'src/io/file.c',
-    'src/io/fileent_list.c',
-    'src/io/path.c',
-    'src/io/wfileent_list.c',
-    'src/locale/unicode.c',
-    'src/log/log.c',
-    'src/log/logger.c',
-    'src/log/syslog.c',
-    'src/proc/dbgaction.c',
-    'src/proc/dbgthread.c',
-    'src/proc/env.c',
-    'src/proc/format_backtrace.c',
-    'src/proc/format_gdb.c',
-    'src/proc/pid.c',
-    'src/proc/stackdump.c',
-    'src/util/prefix_map.c',
+    'src/bas/base/stdio.c',
+    'src/bas/base/str.c',
+    'src/bas/base/string_list.c',
+    'src/bas/base/wstring.c',
+    'src/bas/base/wstring_list.c',
+    'src/bas/cli/args.c',
+    'src/bas/cli/cli_parser.c',
+    'src/bas/cli/opt_parser.c',
+    'src/bas/cli/program.c',
+    'src/bas/io/file.c',
+    'src/bas/io/fileent_list.c',
+    'src/bas/io/path.c',
+    'src/bas/io/wfileent_list.c',
+    'src/bas/locale/unicode.c',
+    'src/bas/log/log.c',
+    'src/bas/log/logger.c',
+    'src/bas/log/syslog.c',
+    'src/bas/proc/dbgaction.c',
+    'src/bas/proc/dbgthread.c',
+    'src/bas/proc/env.c',
+    'src/bas/proc/format_backtrace.c',
+    'src/bas/proc/format_gdb.c',
+    'src/bas/proc/pid.c',
+    'src/bas/proc/stackdump.c',
+    'src/bas/util/prefix_map.c',
 )
 
 # Executable (optional wx media/webview only when found)
@@ -85,27 +86,49 @@ exe_deps = [
     zlib_dep,
 ]
 
+override_options = ['b_lundef=false']  # Allows undefined symbols at link time
+
 lib_bas_c = library(
     'bas-c',
     c_sources,
     dependencies: exe_deps,
     include_directories: exe_inc,
-    c_args: c_nowarn + ['-DLOGGER_NAME=bas'],
-    override_options: ['b_lundef=false'], # Allows undefined symbols at link time
+    c_args: c_args,
+    override_options: override_options,
     version: meson.project_version(),
     soversion: '1',
     install: true,
 )
 
+lib_bas_c_static = static_library(
+    'bas-c',
+    c_sources,
+    dependencies: exe_deps,
+    include_directories: exe_inc,
+    c_args: c_args,
+    override_options: override_options,
+    install: true,
+)
+
 bas_c_dep = declare_dependency(
     link_with: lib_bas_c,
-    include_directories: exe_inc
+    include_directories: exe_inc,
+    dependencies: exe_deps,
 )
+
+bas_c_static_dep = declare_dependency(
+    link_with: lib_bas_c_static,
+    include_directories: exe_inc,
+    dependencies: exe_deps,
+)
+
+meson.override_dependency('bas-c', bas_c_dep)
+meson.override_dependency('bas-c-static', bas_c_static_dep)
 
 # Bash loadable: libbas-bash (bb-util)
 bas_bash = shared_library(
     'bas-bash',
-    'src/bash/bb-util.c',
+    'src/bas/bash/bb-util.c',
     dependencies: [bash_dep_1, bas_c_dep],
     include_directories: exe_inc,
     version: meson.project_version(),
@@ -118,6 +141,15 @@ pkgconfig = import('pkgconfig')
 pkgconfig.generate(
     lib_bas_c,
     name: 'bas-c',
+    description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
+    version: meson.project_version(),
+    subdirs: 'bas',
+    requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib', 'icu-uc'],
+)
+
+pkgconfig.generate(
+    lib_bas_c_static,
+    name: 'bas-c-static',
     description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
     version: meson.project_version(),
     subdirs: 'bas',
@@ -210,7 +242,7 @@ endforeach
 
 install_subdir(
     'src',
-    install_dir: get_option('includedir') / 'bas',
+    install_dir: get_option('includedir'),
     exclude_files: other_list,
     strip_directory: true,
 )
@@ -231,9 +263,9 @@ install_data(
 # List of all test source files (manually enumerated since Meson lacks fs module)
 # This list is automatically generated from: find src -name '*_test.c' | sort
 all_test_files = [
-    'base/str_test.c',
-    'cli/program_test.c',
-    'log/log_test.c',
+    'bas/base/str_test.c',
+    'bas/cli/program_test.c',
+    'bas/log/log_test.c',
 ]
 
 # Build each test using the 'includes' utility to get source dependencies

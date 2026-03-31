@@ -3,11 +3,11 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include <base/str.h>
-#include <cli/program.h>
-#include <log/uselog.h>
-#include <proc/pid.h>
-#include <proc/stackdump.h>
+#include <bas/base/str.h>
+#include <bas/cli/program.h>
+#include <bas/log/uselog.h>
+#include <bas/proc/pid.h>
+#include <bas/proc/stackdump.h>
 
 static GOptionEntry options[] = {
     OPTION('s', "self", "Show self process"),

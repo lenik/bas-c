@@ -1,10 +1,10 @@
-#include <base/stdio.h>
-#include <base/str.h>
-#include <cli/program.h>
-#include <log/log.h>
-#include <log/uselog.h>
-#include <proc/dbgthread.h>
-#include <proc/stackdump.h>
+#include <bas/base/stdio.h>
+#include <bas/base/str.h>
+#include <bas/cli/program.h>
+#include <bas/log/log.h>
+#include <bas/log/uselog.h>
+#include <bas/proc/dbgthread.h>
+#include <bas/proc/stackdump.h>
 
 #include <assert.h>
 #include <limits.h>

@@ -4,7 +4,7 @@
 
 #define LOG_IDENT "bb-util"
 #define LOG_LEVEL 3
-#include "log/log.h"
+#include "../log/log.h"
 
 #define log log_info
 

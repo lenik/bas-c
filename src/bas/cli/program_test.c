@@ -1,5 +1,5 @@
 #include "program.h"
-#include <log/uselog.h>
+#include <bas/log/uselog.h>
 
 static GOptionEntry options[] = {
     { "force",     'f', 0, G_OPTION_ARG_NONE, &opt_force,
