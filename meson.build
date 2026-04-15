@@ -63,6 +63,7 @@ c_sources = files(
     'src/bas/io/fileent_list.c',
     'src/bas/io/path.c',
     'src/bas/io/wfileent_list.c',
+    'src/bas/locale/i18n.c',
     'src/bas/locale/unicode.c',
     'src/bas/log/log.c',
     'src/bas/log/logger.c',
