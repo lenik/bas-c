@@ -8,42 +8,33 @@ cc = meson.get_compiler('c')
 # Disable all warnings (wx 3.0 and deps are noisy)
 c_nowarn = cc.get_supported_arguments(['-w', '/w'])
 
-# zlib for ZIP support
-zlib_dep = dependency('zlib', required: true)
+# SDK libraries - detect architecture and use appropriate library directory
+target_cpu = build_machine.cpu_family()
 
-# ICU for charset conversion (CharsetEncoder, CharsetDecoder, etc.)
+if fs.is_dir('subprojects/bash-fix')
+    subproject('bash-fix')
+endif
+bash_fix_dep = dependency('bash-fix', required: true)
+
+if fs.is_dir('subprojects/icu-config')
+    subproject('icu-config')
+endif
 icu_uc_dep = dependency('icu-uc', required: true)
 
 # GLib for scriptable UI stack (GList)
 glib_dep = dependency('glib-2.0', required: true)
 
-# SDK libraries - detect architecture and use appropriate library directory
-target_cpu = build_machine.cpu_family()
-
-# Get C compiler for finding libraries
-# (cc defined above)
+# libcurl for HTTP/HTTPS/FTP/FTPS (curl license = permissive)
+libcurl_dep = dependency('libcurl', required: true)
 
 # OpenSSL (crypto + ssl for HTTPS)
 openssl_dep = dependency('openssl', required: true)
 
-# libcurl for HTTP/HTTPS/FTP/FTPS (curl license = permissive)
-libcurl_dep = dependency('libcurl', required: true)
+# zlib for ZIP support
+zlib_dep = dependency('zlib', required: true)
 
 # Include path for src/ so "log/log.h", "base/string_list.h" etc. resolve
 exe_inc = [include_directories('src')]
-
-# Bash headers for loadable builtins (bb-util.c).
-bash_dep = dependency('bash', required: true)
-bash_includedir = bash_dep.get_variable(pkgconfig: 'includedir')
-# Like bash_dep but only the first includedir (avoids shadowing system <getopt.h>).
-bash_dep_1 = declare_dependency(
-    include_directories: include_directories(
-        join_paths(bash_includedir, 'bash'),
-        join_paths(bash_includedir, 'bash/include'),
-        is_system: true,
-    ),
-    compile_args: ['-DSHELL', '-fPIC'],
-)
 
 # zlib is used for decompression, but we'll parse ZIP manually
 c_args = c_nowarn + ['-DLOGGER_NAME=bas']
@@ -130,7 +121,7 @@ meson.override_dependency('bas-c-static', bas_c_static_dep)
 bas_bash = shared_library(
     'bas-bash',
     'src/bas/bash/bb-util.c',
-    dependencies: [bash_dep_1, bas_c_dep],
+    dependencies: [bash_fix_dep, bas_c_dep],
     include_directories: exe_inc,
     version: meson.project_version(),
     soversion: meson.project_version().split('.')[0],
@@ -145,7 +136,7 @@ pkgconfig.generate(
     description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
     version: meson.project_version(),
     subdirs: 'bas',
-    requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib', 'icu-uc'],
+    requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib'],
 )
 
 pkgconfig.generate(
@@ -154,7 +145,7 @@ pkgconfig.generate(
     description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
     version: meson.project_version(),
     subdirs: 'bas',
-    requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib', 'icu-uc'],
+    requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib'],
 )
 
 # ---- Applications (install to bindir) ----
