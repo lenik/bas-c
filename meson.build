@@ -1,4 +1,4 @@
-project('bas-c', 'c', version: '1.0.0', default_options: ['warning_level=0'])
+project('bas-c', 'c', version: '1.0.1', default_options: ['warning_level=0'])
 
 pkgdatadir = get_option('datadir') / meson.project_name()
 
@@ -139,13 +139,21 @@ pkgconfig.generate(
     requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib'],
 )
 
+# Static .pc: use explicit .a path so `pkg-config --libs bas-c-static` links the
+# archive instead of -lbas-c (which would prefer libbas-c.so when both exist).
+# icu-uc is in Requires (not Libs.private) so static consumers get ICU without
+# needing `pkg-config --static`.
 pkgconfig.generate(
-    lib_bas_c_static,
     name: 'bas-c-static',
+    filebase: 'bas-c-static',
     description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
     version: meson.project_version(),
     subdirs: 'bas',
-    requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib'],
+    install_dir: get_option('libdir') / 'pkgconfig',
+    requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib', 'icu-uc'],
+    libraries: ['${bas_c_static_lib}'],
+    variables: ['bas_c_static_lib=${libdir}/libbas-c.a'],
+    uninstalled_variables: ['bas_c_static_lib=${prefix}/libbas-c.a'],
 )
 
 # ---- Applications (install to bindir) ----

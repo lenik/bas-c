@@ -1,3 +1,13 @@
+bas-c (1.0.1) testing; urgency=medium
+
+  * bas-c-static.pc: link libbas-c.a by path instead of -lbas-c so static
+    consumers do not pick up libbas-c.so when both are installed.
+  * bas-c-static.pc: declare icu-uc in Requires for one-line static linking.
+  * Debian libbas-c-dev: ship libbas-c.a and bas-c-static.pc.
+  * icu-config: default icu_major to auto (match pkg-config headers).
+
+ -- Lenik (谢继雷) <lenik@bodz.net>  Tue, 07 Jul 2026 23:15:00 +0800
+
 bas-c (1.0.0) testing; urgency=medium
 
   * Add README.md and refine Meson/Debian packaging.
