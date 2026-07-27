@@ -41,3 +41,11 @@ Thumbs.db
 *.Tpo
 *.gz
 
+# gettext
+**/po/*.gmo
+**/po/*.mo
+**/po/*.header
+**/po/*.sed
+**/po/*.sin
+**/po/*.template
+

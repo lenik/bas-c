@@ -5,6 +5,7 @@
 
 #include <bas/base/str.h>
 #include <bas/cli/program.h>
+#include <bas/locale/i18n.h>
 #include <bas/log/uselog.h>
 #include <bas/proc/pid.h>
 #include <bas/proc/stackdump.h>
@@ -55,11 +56,13 @@ gboolean parse_option(const char *_opt, const char *val, parse_options_ctx *ctx)
 
 int main(int argc, char **argv) {
     pid_t start;
+
+    init_i18n(LOCALEDIR);
     
     // stackdump_install_crash_handler(&stackdump_color_schema_default);
     // stackdump_set_interactive(1);
 
-    program_title = "Print parent process(-es) information";
+    program_title = _("Print parent process(-es) information");
     program_help_args = "[PID]";
 
     extern logger_t bas_logger;
@@ -85,14 +88,14 @@ int main(int argc, char **argv) {
             char *pidstr = *argv++;
             start = strtol(pidstr, NULL, 0);
             if (start == (pid_t) 0) {
-                logerror_fmt("Bad pid: %s", pidstr);
+                logerror_fmt(_("Bad pid: %s"), pidstr);
                 continue;
             }
             
             if (! opt_self) {
                 start = getppidof(start);
                 if (start == (pid_t) 0) {
-                    logwarn_fmt("Maybe root process: %s", pidstr);
+                    logwarn_fmt(_("Maybe root process: %s"), pidstr);
                     continue;
                 }
             }
@@ -106,7 +109,7 @@ int main(int argc, char **argv) {
         if (! opt_self) {
             start = getppidof(start);
             if (start == (pid_t) 0) {
-                logerror_fmt("Failed to get the parent process for %d", getpid());
+                logerror_fmt(_("Failed to get the parent process for %d"), getpid());
                 return 1;
             }
         }
@@ -128,14 +131,14 @@ void dump(pid_t pid) {
         sprintf(sym, "/proc/%d/exe", pid);
         cc = readlink(sym, exe, PATH_MAX);
         if (cc == -1)
-            perror("\tReadlink failed");
+            perror(_("\tReadlink failed"));
         else
             printf("\t%s\n    ", exe);
     }
     
     sprintf(sym, "/proc/%d/cmdline", pid);
     if ((f = fopen(sym, "r")) == NULL) {
-        fprintf(stderr, "\tFailed to open file %s", sym);
+        fprintf(stderr, _("\tFailed to open file %s"), sym);
         perror("");
     } else {
         putchar('\t');

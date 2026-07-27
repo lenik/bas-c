@@ -2,6 +2,7 @@
 
 #include "../base/stdio.h"
 #include "../base/str.h"
+#include "../locale/i18n.h"
 #include "../log/log.h"
 #include "../log/logger.h"
 
@@ -28,15 +29,19 @@ bool parse_options(GOptionEntry *options, parse_options_ctx *ctx) {
     opts = g_option_context_new(program_help_args);
 
     GOptionGroup *main_group = g_option_group_new(
-        "main", "Main options", 
+        "main", N_("Main options"),
         NULL, ctx, NULL);
+
+#ifdef TEXT_DOMAIN
+    g_option_group_set_translation_domain(main_group, __to_string(TEXT_DOMAIN));
+#endif
 
     g_option_group_add_entries(main_group, options);
 
     g_option_context_set_main_group(opts, main_group);
 
     if (! g_option_context_parse(opts, &ctx->argc, &ctx->argv, &gerr)) {
-        errorf("Couldn't parse options: %s\n", gerr->message);
+        errorf(_("Couldn't parse options: %s\n"), gerr->message);
         g_option_context_free(opts);
         return FALSE;
     }
@@ -113,13 +118,13 @@ gboolean parse_option_defaults(const char *opt,
         }
         if (streq(opt, "version")) {
             puts(program_title);
-            puts("Written by Lenik, (at) 99jsj.com");
+            puts(_("Written by Lenik, (at) 99jsj.com"));
             return true;
         }
         break;
     }
 
-    log_err("Bad option: %s %s", opt, val);
+    log_err(_("Bad option: %s %s"), opt, val);
     return FALSE;
 }
 
@@ -148,7 +153,7 @@ bool process_files(char **paths,
     for (path = *paths; *path; paths++) {
         FILE *in = fopen(path, open_mode);
         if (in == NULL) {
-            log_perr("Can't open file %s", path);
+            log_perr(_("Can't open file %s"), path);
             err = true;
         } else {
             if (! handler(path, in, data))

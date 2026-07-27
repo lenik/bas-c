@@ -1,0 +1,99 @@
+# French translations for bas-c.
+# Copyright (C) 2026 Lenik
+# This file is distributed under the same license as the bas-c package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: bas-c 1.0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-13 16:15+0800\n"
+"PO-Revision-Date: 2026-07-13 16:15+0800\n"
+"Last-Translator: Lenik <zephyr@bodz.net>\n"
+"Language-Team: fr\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: app/ppid.c:14
+msgid "Show self process"
+msgstr "Afficher le processus courant"
+
+#: app/ppid.c:15
+msgid "Show all parent processes"
+msgstr "Afficher tous les processus parents"
+
+#: app/ppid.c:18 app/sldbg.c:17
+msgid "Show less verbose info"
+msgstr "Afficher moins d'informations"
+
+#: app/ppid.c:19 app/sldbg.c:18
+msgid "Show more verbose info"
+msgstr "Afficher plus d'informations"
+
+#: app/ppid.c:20 app/sldbg.c:19
+msgid "Show version info"
+msgstr "Afficher les informations de version"
+
+#: app/ppid.c:65
+msgid "Print parent process(-es) information"
+msgstr "Afficher les informations du/des processus parent(s)"
+
+#: app/ppid.c:91
+#, c-format
+msgid "Bad pid: %s"
+msgstr "PID invalide : %s"
+
+#: app/ppid.c:98
+#, c-format
+msgid "Maybe root process: %s"
+msgstr "Peut-être un processus racine : %s"
+
+#: app/ppid.c:112
+#, c-format
+msgid "Failed to get the parent process for %d"
+msgstr "Échec de l'obtention du processus parent pour %d"
+
+#: app/ppid.c:134
+msgid "\tReadlink failed"
+msgstr "\tÉchec de readlink"
+
+#: app/ppid.c:141
+#, c-format
+msgid "\tFailed to open file %s"
+msgstr "\tÉchec de l'ouverture du fichier %s"
+
+#: app/sldbg.c:30
+msgid "sleep sample with debug thread"
+msgstr "exemple de sommeil avec fil de débogage"
+
+#: app/sldbg.c:48
+msgid "Failed to parse options\n"
+msgstr "Échec de l'analyse des options\n"
+
+#: app/sldbg.c:60
+msgid "Failed to start debug thread"
+msgstr "Échec du démarrage du fil de débogage"
+
+#: src/bas/cli/program.c:32
+msgid "Main options"
+msgstr "Options principales"
+
+#: src/bas/cli/program.c:44
+#, c-format
+msgid "Couldn't parse options: %s\n"
+msgstr "Impossible d'analyser les options : %s\n"
+
+#: src/bas/cli/program.c:121
+msgid "Written by Lenik, (at) 99jsj.com"
+msgstr "Écrit par Lenik, (at) 99jsj.com"
+
+#: src/bas/cli/program.c:127
+#, c-format
+msgid "Bad option: %s %s"
+msgstr "Option invalide : %s %s"
+
+#: src/bas/cli/program.c:156
+#, c-format
+msgid "Can't open file %s"
+msgstr "Impossible d'ouvrir le fichier %s"

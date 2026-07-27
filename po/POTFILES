@@ -1,0 +1,3 @@
+app/ppid.c
+app/sldbg.c
+src/bas/cli/program.c

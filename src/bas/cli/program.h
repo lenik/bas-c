@@ -16,6 +16,11 @@
 #error "LOGGER_NAME or LOGGER must be defined"
 #endif
 #include "../log/uselog.h"
+#include "../locale/i18n.h"
+
+#ifndef N_
+#define N_(s) (s)
+#endif
 
 /* .section. options */
 
@@ -24,7 +29,7 @@
             G_OPTION_FLAG_NO_ARG,               \
             G_OPTION_ARG_CALLBACK,              \
             &_g_parse_option,                   \
-            description,                        \
+            N_(description),                    \
             NULL,                               \
             }
 
@@ -33,7 +38,7 @@
             0,                                  \
             G_OPTION_ARG_CALLBACK,              \
             &_g_parse_option,                   \
-            description,                        \
+            N_(description),                    \
             arg_description,                    \
             }
 

@@ -1,6 +1,7 @@
 #include <bas/base/stdio.h>
 #include <bas/base/str.h>
 #include <bas/cli/program.h>
+#include <bas/locale/i18n.h>
 #include <bas/log/log.h>
 #include <bas/log/uselog.h>
 #include <bas/proc/dbgthread.h>
@@ -24,7 +25,9 @@ gboolean parse_option(const char *opt, const char *val, parse_options_ctx *ctx) 
 }
 
 int main(int argc, char **argv) {
-    program_title = "sleep sample with debug thread";
+    init_i18n(LOCALEDIR);
+
+    program_title = _("sleep sample with debug thread");
     program_help_args = "[TIMEOUT]";
     
     stackdump_install_crash_handler(&stackdump_color_schema_default);
@@ -42,7 +45,7 @@ int main(int argc, char **argv) {
     };
 
     if (! parse_options(options, &ctx)) {
-        errorf("Failed to parse options\n");
+        errorf(_("Failed to parse options\n"));
         return 1;
     }
 
@@ -54,7 +57,7 @@ int main(int argc, char **argv) {
     loginfo("Starting debug thread");
     void *context = start_dbg_thread();
     if (!context) {
-        logerror("Failed to start debug thread");
+        logerror(_("Failed to start debug thread"));
         return 1;
     }
     
