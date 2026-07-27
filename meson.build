@@ -156,6 +156,7 @@ exe_deps = [
     libcurl_dep,
     openssl_dep,
     zlib_dep,
+    thread_dep,
 ]
 
 if meson_has_override_options
@@ -239,7 +240,7 @@ if meson_has_pkg_pos
         name: 'bas-c',
         description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
         version: meson.project_version(),
-        subdirs: 'bas',
+        # headers live at ${includedir}/bas/... (include <bas/...>)
         requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib'],
     )
 else
@@ -248,7 +249,7 @@ else
         name: 'bas-c',
         description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
         version: meson.project_version(),
-        subdirs: 'bas',
+        # headers live at ${includedir}/bas/... (include <bas/...>)
         requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib'],
     )
 endif
@@ -263,7 +264,7 @@ if meson_has_pkg_uninst
         filebase: 'bas-c-static',
         description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
         version: meson.project_version(),
-        subdirs: 'bas',
+        # headers live at ${includedir}/bas/... (include <bas/...>)
         install_dir: pkgconfig_dir,
         requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib', 'icu-uc'],
         libraries: ['${bas_c_static_lib}'],
@@ -277,7 +278,7 @@ elif meson_has_pkg_pos
         filebase: 'bas-c-static',
         description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
         version: meson.project_version(),
-        subdirs: 'bas',
+        # headers live at ${includedir}/bas/... (include <bas/...>)
         requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib', 'icu-uc'],
     )
 else
@@ -287,7 +288,7 @@ else
         filebase: 'bas-c-static',
         description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
         version: meson.project_version(),
-        subdirs: 'bas',
+        # headers live at ${includedir}/bas/... (include <bas/...>)
         requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib', 'icu-uc'],
     )
 endif
