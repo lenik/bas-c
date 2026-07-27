@@ -79,15 +79,20 @@ else
     ).stdout().strip() == 'yes'
 endif
 
+# Prefer get_variable() so Meson < 0.54 (no override_dependency) still works.
 if have_bash_builtins_sub
-    subproject('bash-builtins')
+    bash_builtins_sp = subproject('bash-builtins')
+    bash_builtins_dep = bash_builtins_sp.get_variable('bash_builtins_dep')
+else
+    bash_builtins_dep = dependency('bash-builtins', required: true)
 endif
-bash_builtins_dep = dependency('bash-builtins', required: true)
 
 if have_icu_config_sub
-    subproject('icu-config')
+    icu_config_sp = subproject('icu-config')
+    icu_uc_dep = icu_config_sp.get_variable('icu_uc_dep')
+else
+    icu_uc_dep = dependency('icu-uc', required: true)
 endif
-icu_uc_dep = dependency('icu-uc', required: true)
 
 # GLib for scriptable UI stack (GList)
 glib_dep = dependency('glib-2.0', required: true)
