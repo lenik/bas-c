@@ -594,30 +594,13 @@ if have_po and meson.version().version_compare('>=0.50.0')
     subdir('po')
 endif
 
-# run_target with a multiline shell script emits broken build.ninja on Meson 0.37.
+# Optional posync: keep as an external script so Ninja never sees newlines in a
+# rule (Meson ≥0.56 errors; 0.37 emits a broken build.ninja).
+posync_sh = files('scripts/posync.sh')
 if meson.version().version_compare('>=0.50.0')
     run_target(
         'posync',
-        command: [
-            'bash',
-            '-euc', '''
-                cd "@SOURCE_ROOT@/po"
-                poflags=(--no-wrap)
-                xgettext "${poflags[@]}" --from-code=UTF-8 --keyword=_ --keyword=N_ --keyword=OPTION:3 --keyword=OPTARG:3 --language=C --directory=.. --output=bas_c.pot --files-from=POTFILES
-                while IFS= read -r lang; do
-                    [ -n "$lang" ] || continue
-                    case "$lang" in
-                        '#'* ) continue ;;
-                    esac
-                    po_file="$lang.po"
-                    if [ ! -f "$po_file" ]; then
-                        msginit "${poflags[@]}" --no-translator --input=bas_c.pot --locale="$lang" --output-file="$po_file"
-                    fi
-                    msgmerge "${poflags[@]}" --update --backup=none "$po_file" bas_c.pot
-                    msgattrib "${poflags[@]}" --no-obsolete --output-file="$po_file" "$po_file"
-                done < LINGUAS
-            ''',
-        ],
+        command: ['bash', posync_sh, '@SOURCE_ROOT@'],
     )
 endif
 
