@@ -226,32 +226,69 @@ bas_bash = shared_library(
 )
 
 # ---- pkg-config ----
+# Positional library arg for generate() needs Meson >= 0.46.
 pkgconfig = import('pkgconfig')
-pkgconfig.generate(
-    lib_bas_c,
-    name: 'bas-c',
-    description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
-    version: meson.project_version(),
-    subdirs: 'bas',
-    requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib'],
-)
+meson_has_pkg_pos = meson.version().version_compare('>=0.46.0')
+meson_has_pkg_uninst = meson.version().version_compare('>=0.54.0')
+if meson_has_pkg_pos
+    pkgconfig.generate(
+        lib_bas_c,
+        name: 'bas-c',
+        description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
+        version: meson.project_version(),
+        subdirs: 'bas',
+        requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib'],
+    )
+else
+    pkgconfig.generate(
+        libraries: lib_bas_c,
+        name: 'bas-c',
+        description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
+        version: meson.project_version(),
+        subdirs: 'bas',
+        requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib'],
+    )
+endif
 
 # Static .pc: use explicit .a path so `pkg-config --libs bas-c-static` links the
 # archive instead of -lbas-c (which would prefer libbas-c.so when both exist).
 # icu-uc is in Requires (not Libs.private) so static consumers get ICU without
 # needing `pkg-config --static`.
-pkgconfig.generate(
-    name: 'bas-c-static',
-    filebase: 'bas-c-static',
-    description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
-    version: meson.project_version(),
-    subdirs: 'bas',
-    install_dir: pkgconfig_dir,
-    requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib', 'icu-uc'],
-    libraries: ['${bas_c_static_lib}'],
-    variables: ['bas_c_static_lib=${libdir}/libbas-c.a'],
-    uninstalled_variables: ['bas_c_static_lib=${prefix}/libbas-c.a'],
-)
+if meson_has_pkg_uninst
+    pkgconfig.generate(
+        name: 'bas-c-static',
+        filebase: 'bas-c-static',
+        description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
+        version: meson.project_version(),
+        subdirs: 'bas',
+        install_dir: pkgconfig_dir,
+        requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib', 'icu-uc'],
+        libraries: ['${bas_c_static_lib}'],
+        variables: ['bas_c_static_lib=${libdir}/libbas-c.a'],
+        uninstalled_variables: ['bas_c_static_lib=${prefix}/libbas-c.a'],
+    )
+elif meson_has_pkg_pos
+    pkgconfig.generate(
+        lib_bas_c_static,
+        name: 'bas-c-static',
+        filebase: 'bas-c-static',
+        description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
+        version: meson.project_version(),
+        subdirs: 'bas',
+        requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib', 'icu-uc'],
+    )
+else
+    pkgconfig.generate(
+        libraries: lib_bas_c_static,
+        name: 'bas-c-static',
+        filebase: 'bas-c-static',
+        description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
+        version: meson.project_version(),
+        subdirs: 'bas',
+        requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib', 'icu-uc'],
+    )
+endif
+
 
 # ---- Applications (install to bindir) ----
 # Auto-discover all app/*.c files and build each as a standalone program.
