@@ -7,11 +7,15 @@ project('bas-c', 'c', version: '1.0.1', default_options: ['warning_level=1'])
 # - override_dependency(): since 0.54.0
 # - target override_options: since 0.40.0
 # - run_command(..., check:): since 0.47.0
+# - compiler.get_supported_arguments(): since 0.43.0
 meson_has_path_op = meson.version().version_compare('>=0.49.0')
 meson_has_fs = meson.version().version_compare('>=0.53.0')
 meson_has_override_dep = meson.version().version_compare('>=0.54.0')
 meson_has_override_options = meson.version().version_compare('>=0.40.0')
 meson_has_run_check = meson.version().version_compare('>=0.47.0')
+meson_has_supported_args = meson.version().version_compare('>=0.43.0')
+meson_has_strip_dir = meson.version().version_compare('>=0.45.0')
+meson_has_install_mode = meson.version().version_compare('>=0.38.0')
 
 # Install layout:
 #   Meson >= 0.49: get_option + `/` path joins.
@@ -49,7 +53,11 @@ endif
 cc = meson.get_compiler('c')
 
 # Disable all warnings (wx 3.0 and deps are noisy)
-c_nowarn = cc.get_supported_arguments(['-w', '/w'])
+if meson_has_supported_args
+    c_nowarn = cc.get_supported_arguments(['-w', '/w'])
+else
+    c_nowarn = ['-w']
+endif
 
 # SDK libraries - detect architecture and use appropriate library directory
 target_cpu = build_machine.cpu_family()
@@ -340,12 +348,20 @@ if find_bash_ok and find_bash_out != ''
             else
                 completion_name = bash_base.split('.')[0]
             endif
-            install_data(
-                line,
-                rename: completion_name,
-                install_dir: bash_completions_dir,
-                install_mode: 'rw-r--r--',
-            )
+            if meson_has_install_mode
+                install_data(
+                    line,
+                    rename: completion_name,
+                    install_dir: bash_completions_dir,
+                    install_mode: 'rw-r--r--',
+                )
+            else
+                install_data(
+                    line,
+                    rename: completion_name,
+                    install_dir: bash_completions_dir,
+                )
+            endif
         endif
     endforeach
 endif
@@ -388,19 +404,35 @@ foreach f : other_files
     endif
 endforeach
 
-install_subdir(
-    'src',
-    install_dir: includedir,
-    exclude_files: other_list,
-    strip_directory: true,
-)
+if meson_has_strip_dir
+    install_subdir(
+        'src',
+        install_dir: includedir,
+        exclude_files: other_list,
+        strip_directory: true,
+    )
+else
+    # Meson < 0.45 has no strip_directory; keep the `src` directory name out by
+    # installing `src/bas` (and other top-level trees) directly under includedir.
+    install_subdir(
+        'src/bas',
+        install_dir: includedir,
+    )
+endif
 
 # ---- Docs for libbas-c ----
-install_data(
-    'README.md',
-    install_dir: pkgdocdir,
-    install_mode: 'rw-r--r--',
-)
+if meson_has_install_mode
+    install_data(
+        'README.md',
+        install_dir: pkgdocdir,
+        install_mode: 'rw-r--r--',
+    )
+else
+    install_data(
+        'README.md',
+        install_dir: pkgdocdir,
+    )
+endif
 
 # Unit tests generator
 # List of all test source files (manually enumerated)
