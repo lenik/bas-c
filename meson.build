@@ -106,6 +106,9 @@ openssl_dep = dependency('openssl', required: true)
 # zlib for ZIP support
 zlib_dep = dependency('zlib', required: true)
 
+# pthreads (dbgthread); not always pulled transitively on older glibc/toolchains.
+thread_dep = dependency('threads')
+
 # Include path for src/ so "log/log.h", "base/string_list.h" etc. resolve
 exe_inc = [include_directories('src')]
 
