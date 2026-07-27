@@ -230,6 +230,8 @@ bas_bash = shared_library(
 )
 
 # ---- pkg-config ----
+# Headers install to ${includedir}/bas/...; consumers use #include <bas/...>,
+# so do not set subdirs: 'bas' (that would add -I${includedir}/bas).
 # Positional library arg for generate() needs Meson >= 0.46.
 pkgconfig = import('pkgconfig')
 meson_has_pkg_pos = meson.version().version_compare('>=0.46.0')
@@ -240,7 +242,6 @@ if meson_has_pkg_pos
         name: 'bas-c',
         description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
         version: meson.project_version(),
-        # headers live at ${includedir}/bas/... (include <bas/...>)
         requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib'],
     )
 else
@@ -249,7 +250,6 @@ else
         name: 'bas-c',
         description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
         version: meson.project_version(),
-        # headers live at ${includedir}/bas/... (include <bas/...>)
         requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib'],
     )
 endif
@@ -264,7 +264,6 @@ if meson_has_pkg_uninst
         filebase: 'bas-c-static',
         description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
         version: meson.project_version(),
-        # headers live at ${includedir}/bas/... (include <bas/...>)
         install_dir: pkgconfig_dir,
         requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib', 'icu-uc'],
         libraries: ['${bas_c_static_lib}'],
@@ -278,7 +277,6 @@ elif meson_has_pkg_pos
         filebase: 'bas-c-static',
         description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
         version: meson.project_version(),
-        # headers live at ${includedir}/bas/... (include <bas/...>)
         requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib', 'icu-uc'],
     )
 else
@@ -288,7 +286,6 @@ else
         filebase: 'bas-c-static',
         description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
         version: meson.project_version(),
-        # headers live at ${includedir}/bas/... (include <bas/...>)
         requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib', 'icu-uc'],
     )
 endif
