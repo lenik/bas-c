@@ -555,6 +555,7 @@ foreach test_rel_path : all_test_files
 endforeach
 
 # Optional gettext trees (may be absent on minimal checkouts).
+# i18n/project_source_root need Meson >= 0.50; skip on older (e.g. stretch 0.37).
 if meson_has_fs
     have_po = fs.is_dir('po')
 else
@@ -562,30 +563,34 @@ else
         'sh', '-c', 'test -d po && echo yes || echo no',
     ).stdout().strip() == 'yes'
 endif
-if have_po
+if have_po and meson.version().version_compare('>=0.50.0')
     subdir('po')
 endif
 
-run_target(
-    'posync',
-    command: [
-        'bash',
-        '-euc', '''
-            cd "@SOURCE_ROOT@/po"
-            poflags=(--no-wrap)
-            xgettext "${poflags[@]}" --from-code=UTF-8 --keyword=_ --keyword=N_ --keyword=OPTION:3 --keyword=OPTARG:3 --language=C --directory=.. --output=bas_c.pot --files-from=POTFILES
-            while IFS= read -r lang; do
-                [ -n "$lang" ] || continue
-                case "$lang" in
-                    '#'* ) continue ;;
-                esac
-                po_file="$lang.po"
-                if [ ! -f "$po_file" ]; then
-                    msginit "${poflags[@]}" --no-translator --input=bas_c.pot --locale="$lang" --output-file="$po_file"
-                fi
-                msgmerge "${poflags[@]}" --update --backup=none "$po_file" bas_c.pot
-                msgattrib "${poflags[@]}" --no-obsolete --output-file="$po_file" "$po_file"
-            done < LINGUAS
-        ''',
-    ],
-)
+# run_target with a multiline shell script emits broken build.ninja on Meson 0.37.
+if meson.version().version_compare('>=0.50.0')
+    run_target(
+        'posync',
+        command: [
+            'bash',
+            '-euc', '''
+                cd "@SOURCE_ROOT@/po"
+                poflags=(--no-wrap)
+                xgettext "${poflags[@]}" --from-code=UTF-8 --keyword=_ --keyword=N_ --keyword=OPTION:3 --keyword=OPTARG:3 --language=C --directory=.. --output=bas_c.pot --files-from=POTFILES
+                while IFS= read -r lang; do
+                    [ -n "$lang" ] || continue
+                    case "$lang" in
+                        '#'* ) continue ;;
+                    esac
+                    po_file="$lang.po"
+                    if [ ! -f "$po_file" ]; then
+                        msginit "${poflags[@]}" --no-translator --input=bas_c.pot --locale="$lang" --output-file="$po_file"
+                    fi
+                    msgmerge "${poflags[@]}" --update --backup=none "$po_file" bas_c.pot
+                    msgattrib "${poflags[@]}" --no-obsolete --output-file="$po_file" "$po_file"
+                done < LINGUAS
+            ''',
+        ],
+    )
+endif
+
