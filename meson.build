@@ -1,8 +1,51 @@
-project('bas-c', 'c', version: '1.0.1', default_options: ['warning_level=0'])
+# warning_level=1: Meson < 0.40 rejects warning_level=0; -w still used via c_args.
+project('bas-c', 'c', version: '1.0.1', default_options: ['warning_level=1'])
 
-pkgdatadir = get_option('datadir') / meson.project_name()
+# Feature gates (Meson version).
+# - string path `/` operator: since 0.49.0
+# - fs module: since 0.53.0
+# - override_dependency(): since 0.54.0
+# - target override_options: since 0.40.0
+# - run_command(..., check:): since 0.47.0
+meson_has_path_op = meson.version().version_compare('>=0.49.0')
+meson_has_fs = meson.version().version_compare('>=0.53.0')
+meson_has_override_dep = meson.version().version_compare('>=0.54.0')
+meson_has_override_options = meson.version().version_compare('>=0.40.0')
+meson_has_run_check = meson.version().version_compare('>=0.47.0')
 
-fs = import('fs')
+# Install layout:
+#   Meson >= 0.49: get_option + `/` path joins.
+#   Older Meson: join_paths (string `/` is 0.49+; still honors --prefix).
+if meson_has_path_op
+    prefix = get_option('prefix')
+    bindir = prefix / get_option('bindir')
+    datadir = prefix / get_option('datadir')
+    localedir = prefix / get_option('localedir')
+    includedir = prefix / get_option('includedir')
+    libdir = prefix / get_option('libdir')
+    pkgdatadir = datadir / meson.project_name()
+    pkgdocdir = datadir / 'doc' / 'libbas-c'
+    bash_completions_dir = datadir / 'bash-completion' / 'completions'
+    pkgconfig_dir = libdir / 'pkgconfig'
+    pkg_app_dir = pkgdatadir / 'app'
+else
+    prefix = get_option('prefix')
+    bindir = join_paths(prefix, get_option('bindir'))
+    datadir = join_paths(prefix, get_option('datadir'))
+    localedir = join_paths(prefix, get_option('localedir'))
+    includedir = join_paths(prefix, get_option('includedir'))
+    libdir = join_paths(prefix, get_option('libdir'))
+    pkgdatadir = join_paths(datadir, meson.project_name())
+    pkgdocdir = join_paths(datadir, 'doc', 'libbas-c')
+    bash_completions_dir = join_paths(datadir, 'bash-completion', 'completions')
+    pkgconfig_dir = join_paths(libdir, 'pkgconfig')
+    pkg_app_dir = join_paths(pkgdatadir, 'app')
+endif
+
+if meson_has_fs
+    fs = import('fs')
+endif
+
 cc = meson.get_compiler('c')
 
 # Disable all warnings (wx 3.0 and deps are noisy)
@@ -11,12 +54,29 @@ c_nowarn = cc.get_supported_arguments(['-w', '/w'])
 # SDK libraries - detect architecture and use appropriate library directory
 target_cpu = build_machine.cpu_family()
 
-if fs.is_dir('subprojects/bash-fix')
-    subproject('bash-fix')
+# Optional subprojects (present when bas-c/subprojects is wired correctly).
+have_bash_builtins_sub = false
+have_icu_config_sub = false
+if meson_has_fs
+    have_bash_builtins_sub = fs.is_dir('subprojects/bash-builtins')
+    have_icu_config_sub = fs.is_dir('subprojects/icu-config')
+else
+    have_bash_builtins_sub = run_command(
+        'sh', '-c', 'test -d "$1" && echo yes || echo no',
+        'sh', 'subprojects/bash-builtins',
+    ).stdout().strip() == 'yes'
+    have_icu_config_sub = run_command(
+        'sh', '-c', 'test -d "$1" && echo yes || echo no',
+        'sh', 'subprojects/icu-config',
+    ).stdout().strip() == 'yes'
 endif
-bash_fix_dep = dependency('bash-fix', required: true)
 
-if fs.is_dir('subprojects/icu-config')
+if have_bash_builtins_sub
+    subproject('bash-builtins')
+endif
+bash_builtins_dep = dependency('bash-builtins', required: true)
+
+if have_icu_config_sub
     subproject('icu-config')
 endif
 icu_uc_dep = dependency('icu-uc', required: true)
@@ -37,7 +97,11 @@ zlib_dep = dependency('zlib', required: true)
 exe_inc = [include_directories('src')]
 
 # zlib is used for decompression, but we'll parse ZIP manually
-c_args = c_nowarn + ['-DLOGGER_NAME=bas']
+c_args = c_nowarn + [
+    '-DLOGGER_NAME=bas',
+    '-DTEXT_DOMAIN=bas_c',
+    '-DLOCALEDIR="@0@"'.format(localedir),
+]
 
 c_sources = files(
     'src/module.c',
@@ -78,29 +142,47 @@ exe_deps = [
     zlib_dep,
 ]
 
-override_options = ['b_lundef=false']  # Allows undefined symbols at link time
-
-lib_bas_c = library(
-    'bas-c',
-    c_sources,
-    dependencies: exe_deps,
-    include_directories: exe_inc,
-    c_args: c_args,
-    override_options: override_options,
-    version: meson.project_version(),
-    soversion: '1',
-    install: true,
-)
-
-lib_bas_c_static = static_library(
-    'bas-c',
-    c_sources,
-    dependencies: exe_deps,
-    include_directories: exe_inc,
-    c_args: c_args,
-    override_options: override_options,
-    install: true,
-)
+if meson_has_override_options
+    lib_bas_c = library(
+        'bas-c',
+        c_sources,
+        dependencies: exe_deps,
+        include_directories: exe_inc,
+        c_args: c_args,
+        override_options: ['b_lundef=false'],
+        version: meson.project_version(),
+        soversion: '1',
+        install: true,
+    )
+    lib_bas_c_static = static_library(
+        'bas-c',
+        c_sources,
+        dependencies: exe_deps,
+        include_directories: exe_inc,
+        c_args: c_args,
+        override_options: ['b_lundef=false'],
+        install: true,
+    )
+else
+    lib_bas_c = library(
+        'bas-c',
+        c_sources,
+        dependencies: exe_deps,
+        include_directories: exe_inc,
+        c_args: c_args,
+        version: meson.project_version(),
+        soversion: '1',
+        install: true,
+    )
+    lib_bas_c_static = static_library(
+        'bas-c',
+        c_sources,
+        dependencies: exe_deps,
+        include_directories: exe_inc,
+        c_args: c_args,
+        install: true,
+    )
+endif
 
 bas_c_dep = declare_dependency(
     link_with: lib_bas_c,
@@ -114,14 +196,16 @@ bas_c_static_dep = declare_dependency(
     dependencies: exe_deps,
 )
 
-meson.override_dependency('bas-c', bas_c_dep)
-meson.override_dependency('bas-c-static', bas_c_static_dep)
+if meson_has_override_dep
+    meson.override_dependency('bas-c', bas_c_dep)
+    meson.override_dependency('bas-c-static', bas_c_static_dep)
+endif
 
 # Bash loadable: libbas-bash (bb-util)
 bas_bash = shared_library(
     'bas-bash',
     'src/bas/bash/bb-util.c',
-    dependencies: [bash_fix_dep, bas_c_dep],
+    dependencies: [bash_builtins_dep, bas_c_dep],
     include_directories: exe_inc,
     version: meson.project_version(),
     soversion: meson.project_version().split('.')[0],
@@ -149,7 +233,7 @@ pkgconfig.generate(
     description: 'C base library: CLI, logging, process helpers, I/O, bash loadable builtin support',
     version: meson.project_version(),
     subdirs: 'bas',
-    install_dir: get_option('libdir') / 'pkgconfig',
+    install_dir: pkgconfig_dir,
     requires: ['glib-2.0', 'libcurl', 'openssl', 'zlib', 'icu-uc'],
     libraries: ['${bas_c_static_lib}'],
     variables: ['bas_c_static_lib=${libdir}/libbas-c.a'],
@@ -158,26 +242,43 @@ pkgconfig.generate(
 
 # ---- Applications (install to bindir) ----
 # Auto-discover all app/*.c files and build each as a standalone program.
-# Each app links with libbas-c and defines LOGGER_NAME to the program name.
-app_find = run_command(
-    'find',
-    'app',
-    '-maxdepth', '1',
-    '-type', 'f',
-    '-name', '*.c',
-    check: false,
-)
+if meson_has_run_check
+    app_find = run_command(
+        'find',
+        'app',
+        '-maxdepth', '1',
+        '-type', 'f',
+        '-name', '*.c',
+        check: false,
+    )
+    app_find_ok = app_find.returncode() == 0
+    app_find_out = app_find.stdout().strip()
+else
+    app_find = run_command(
+        'sh', '-c',
+        'find app -maxdepth 1 -type f -name "*.c" 2>/dev/null || true',
+    )
+    app_find_ok = true
+    app_find_out = app_find.stdout().strip()
+endif
+
 app_sources = []
-if app_find.returncode() == 0 and app_find.stdout().strip() != ''
-    app_sources = app_find.stdout().strip().split('\n')
+if app_find_ok and app_find_out != ''
+    app_sources = app_find_out.split('\n')
 endif
 
 foreach app_src : app_sources
-    app_name = fs.replace_suffix(app_src.split('/')[-1], '')
-    if app_name == 'ppid'
-        install_dir = get_option('bindir')
+    app_parts = app_src.split('/')
+    app_base = app_parts[app_parts.length() - 1]
+    if meson_has_fs
+        app_name = fs.replace_suffix(app_base, '')
     else
-        install_dir = pkgdatadir / 'app'
+        app_name = app_base.split('.')[0]
+    endif
+    if app_name == 'ppid'
+        app_install_dir = bindir
+    else
+        app_install_dir = pkg_app_dir
     endif
     executable(
         app_name,
@@ -185,64 +286,111 @@ foreach app_src : app_sources
         'src/module.c',
         dependencies: exe_deps + [bas_c_dep],
         include_directories: exe_inc,
-        c_args: c_nowarn + ['-DLOGGER_NAME=' + app_name],
+        c_args: c_nowarn + [
+            '-DLOGGER_NAME=' + app_name,
+            '-DTEXT_DOMAIN=bas_c',
+            '-DLOCALEDIR="@0@"'.format(localedir),
+        ],
         install: true,
-        install_dir : install_dir,
+        install_dir: app_install_dir,
     )
 endforeach
 
 # Manpages: app/*.1 -> install to mandir
-find_man = run_command('find', 'app', '-maxdepth', '1', '-name', '*.1', check: false)
-if find_man.returncode() == 0
-    foreach line : find_man.stdout().strip().split('\n')
-        if line == ''
-            continue
+if meson_has_run_check
+    find_man = run_command('find', 'app', '-maxdepth', '1', '-name', '*.1', check: false)
+    find_man_ok = find_man.returncode() == 0
+    find_man_out = find_man.stdout().strip()
+else
+    find_man = run_command(
+        'sh', '-c',
+        'find app -maxdepth 1 -name "*.1" 2>/dev/null || true',
+    )
+    find_man_ok = true
+    find_man_out = find_man.stdout().strip()
+endif
+if find_man_ok and find_man_out != ''
+    foreach line : find_man_out.split('\n')
+        if line != ''
+            install_man(line)
         endif
-        install_man(line)
     endforeach
 endif
 
 # ---- Bash completion (install to datadir/bash-completion/completions) ----
-find_bash = run_command('find', 'app', '-maxdepth', '1', '-name', '*.bash', check: false)
-app_bash_list = []
-if find_bash.returncode() == 0
-    foreach line : find_bash.stdout().strip().split('\n')
-        if line == ''
-            continue
+if meson_has_run_check
+    find_bash = run_command('find', 'app', '-maxdepth', '1', '-name', '*.bash', check: false)
+    find_bash_ok = find_bash.returncode() == 0
+    find_bash_out = find_bash.stdout().strip()
+else
+    find_bash = run_command(
+        'sh', '-c',
+        'find app -maxdepth 1 -name "*.bash" 2>/dev/null || true',
+    )
+    find_bash_ok = true
+    find_bash_out = find_bash.stdout().strip()
+endif
+if find_bash_ok and find_bash_out != ''
+    foreach line : find_bash_out.split('\n')
+        if line != ''
+            bash_parts = line.split('/')
+            bash_base = bash_parts[bash_parts.length() - 1]
+            if meson_has_fs
+                completion_name = fs.replace_suffix(bash_base, '')
+            else
+                completion_name = bash_base.split('.')[0]
+            endif
+            install_data(
+                line,
+                rename: completion_name,
+                install_dir: bash_completions_dir,
+                install_mode: 'rw-r--r--',
+            )
         endif
-        completion_name = fs.replace_suffix(line.split('/')[-1], '')
-        install_data(
-            line,
-            rename: completion_name,
-            install_dir: get_option('datadir') / 'bash-completion' / 'completions',
-            install_mode: 'rw-r--r--',
-        )
     endforeach
 endif
 
-# ---- Headers for libbas-c package (includedir/bas-c) ----
-find_other_cmd = run_command(
-    'find',
-    'src',
-    '-name', '*.h',
-    '-o',
-    '-name', '*.hpp',
-    '-o',
-    '-type', 'd',
-    '-o',
-    '-print',
-    check: true,
-)
+# ---- Headers for libbas-c package (includedir/bas) ----
+if meson_has_run_check
+    find_other_cmd = run_command(
+        'find',
+        'src',
+        '-name', '*.h',
+        '-o',
+        '-name', '*.hpp',
+        '-o',
+        '-type', 'd',
+        '-o',
+        '-print',
+        check: true,
+    )
+else
+    find_other_cmd = run_command(
+        'find',
+        'src',
+        '-name', '*.h',
+        '-o',
+        '-name', '*.hpp',
+        '-o',
+        '-type', 'd',
+        '-o',
+        '-print',
+    )
+endif
 other_files = find_other_cmd.stdout().strip().split('\n')
 
 other_list = []
 foreach f : other_files
-    other_list += f.substring(4)
+    # Strip leading "src/" without string.startswith (Meson >= 0.51).
+    f_parts = f.split('/')
+    if f_parts.length() > 1 and f_parts[0] == 'src'
+        other_list += f.split('src/')[1]
+    endif
 endforeach
 
 install_subdir(
     'src',
-    install_dir: get_option('includedir'),
+    install_dir: includedir,
     exclude_files: other_list,
     strip_directory: true,
 )
@@ -250,64 +398,105 @@ install_subdir(
 # ---- Docs for libbas-c ----
 install_data(
     'README.md',
-    install_dir: get_option('datadir') / 'doc' / 'libbas-c',
+    install_dir: pkgdocdir,
     install_mode: 'rw-r--r--',
 )
 
 # Unit tests generator
-# Find all *_test.c files and build them automatically using the 'includes' utility
-# Similar to Makefile pattern rule: %_test: %_test.c
-#   sources: %_test.c $(includes -e -c %_test.c)
-#   cmdline: $(CC) $(CFLAGS) -o $@ $*_test.c `includes -c $*_test.c` -licuuc -licui18n
-
-# List of all test source files (manually enumerated since Meson lacks fs module)
-# This list is automatically generated from: find src -name '*_test.c' | sort
+# List of all test source files (manually enumerated)
 all_test_files = [
     'bas/base/str_test.c',
     'bas/cli/program_test.c',
     'bas/log/log_test.c',
 ]
 
-# Build each test using the 'includes' utility to get source dependencies
 foreach test_rel_path : all_test_files
     test_c = 'src/' + test_rel_path
 
-    # Extract test name (e.g., ByteBuffer_test from src/io/ByteBuffer_test.c)
     path_parts = test_rel_path.split('/')
     test_file = path_parts[path_parts.length() - 1]
-    test_name = fs.replace_suffix(test_file, '')
+    if meson_has_fs
+        test_name = fs.replace_suffix(test_file, '')
+    else
+        test_name = test_file.split('.')[0]
+    endif
 
-    # Use 'includes' utility to get implementation dependencies
-    # 'includes -e -c test.c' returns source files, one per line (not -I include paths)
-    includes_result = run_command('includes', '-e', '-c', test_c, check: false)
+    if meson_has_run_check
+        includes_result = run_command('includes', '-e', '-c', test_c, check: false)
+        includes_ok = includes_result.returncode() == 0
+        includes_out = includes_result.stdout()
+    else
+        includes_result = run_command(
+            'sh', '-c',
+            'includes -e -c "$1" 2>/dev/null || true',
+            'sh',
+            test_c,
+        )
+        includes_ok = true
+        includes_out = includes_result.stdout()
+    endif
 
     impl_deps = []
-    if includes_result.returncode() == 0
-        # Parse the output: each line is a .c/.c file path
-        output = includes_result.stdout()
-        lines = output.split('\n')
+    if includes_ok
+        lines = includes_out.split('\n')
         foreach line : lines
             line = line.strip()
-            # Keep non-empty lines that are .c/.c files
-            if line.endswith('.c') or line.endswith('.c')
+            if line.endswith('.c')
                 impl_deps += line
             endif
         endforeach
     endif
 
-    # Combine test file with implementation dependencies from 'includes'
     all_sources = [test_c] + impl_deps
 
-    # Create the executable (LOGGER_NAME so program.h and logger.c work in tests)
     test_exe = executable(
         test_name,
         all_sources,
         'src/module.c',
         include_directories: exe_inc,
         dependencies: exe_deps + [bas_c_dep],
-        c_args: c_nowarn + ['-DLOGGER_NAME=test'],
+        c_args: c_nowarn + [
+            '-DLOGGER_NAME=test',
+            '-DTEXT_DOMAIN=bas_c',
+            '-DLOCALEDIR="@0@"'.format(localedir),
+        ],
     )
 
-    # Register the test with meson
     test(test_name, test_exe)
 endforeach
+
+# Optional gettext trees (may be absent on minimal checkouts).
+if meson_has_fs
+    have_po = fs.is_dir('po')
+else
+    have_po = run_command(
+        'sh', '-c', 'test -d po && echo yes || echo no',
+    ).stdout().strip() == 'yes'
+endif
+if have_po
+    subdir('po')
+endif
+
+run_target(
+    'posync',
+    command: [
+        'bash',
+        '-euc', '''
+            cd "@SOURCE_ROOT@/po"
+            poflags=(--no-wrap)
+            xgettext "${poflags[@]}" --from-code=UTF-8 --keyword=_ --keyword=N_ --keyword=OPTION:3 --keyword=OPTARG:3 --language=C --directory=.. --output=bas_c.pot --files-from=POTFILES
+            while IFS= read -r lang; do
+                [ -n "$lang" ] || continue
+                case "$lang" in
+                    '#'* ) continue ;;
+                esac
+                po_file="$lang.po"
+                if [ ! -f "$po_file" ]; then
+                    msginit "${poflags[@]}" --no-translator --input=bas_c.pot --locale="$lang" --output-file="$po_file"
+                fi
+                msgmerge "${poflags[@]}" --update --backup=none "$po_file" bas_c.pot
+                msgattrib "${poflags[@]}" --no-obsolete --output-file="$po_file" "$po_file"
+            done < LINGUAS
+        ''',
+    ],
+)
