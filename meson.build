@@ -514,9 +514,24 @@ foreach test_rel_path : all_test_files
     if includes_ok
         lines = includes_out.split('\n')
         foreach line : lines
-            line = line.strip()
-            if line.endswith('.c')
-                impl_deps += line
+            # str.strip/endswith need newer Meson; trim via split for 0.37.
+            line_parts = line.split(' ')
+            trimmed = ''
+            foreach p : line_parts
+                if p != ''
+                    if trimmed == ''
+                        trimmed = p
+                    else
+                        trimmed = trimmed + ' ' + p
+                    endif
+                endif
+            endforeach
+            # Prefer last path-like token if includes printed extra text.
+            toks = trimmed.split('\t')
+            candidate = toks[toks.length() - 1]
+            c_parts = candidate.split('.')
+            if c_parts.length() >= 2 and c_parts[c_parts.length() - 1] == 'c'
+                impl_deps += candidate
             endif
         endforeach
     endif
