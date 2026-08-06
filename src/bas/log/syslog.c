@@ -10,14 +10,16 @@ int syslog_facility = LOG_USER;
 
 void _syslog_x(const char *ident, int option, int level,
                const char *format, ...) {
+    char msgbuf[1024];
     va_list ap;
+
     va_start(ap, format);
+    vsnprintf(msgbuf, sizeof(msgbuf), format, ap);
+    va_end(ap);
 
     openlog(ident, option, syslog_facility);
-    vsyslog(level, format, ap);
+    syslog(level, "%s", msgbuf);
     closelog();
-
-    va_end(ap);
 }
 
 void _syslog_x_perror(const char *ident, int option, int level,
