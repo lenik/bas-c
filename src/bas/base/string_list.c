@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>  // for ssize_t
+#include "str.h"
 
 #define STRING_LIST_DEFAULT_CAPACITY 16
 #define STRING_LIST_GROWTH_FACTOR 2
@@ -87,7 +88,7 @@ int string_list_append(string_list* list, const char* str) {
         return 0;
     }
     
-    char* copy = strdup(str);
+    char* copy = str_dup(str);
     if (!copy) {
         return 0;
     }
@@ -105,7 +106,7 @@ int string_list_insert(string_list* list, size_t index, const char* str) {
         return 0;
     }
     
-    char* copy = strdup(str);
+    char* copy = str_dup(str);
     if (!copy) {
         return 0;
     }
@@ -237,7 +238,7 @@ void string_list_sort(string_list* list) {
 // Join all strings with a separator (returns a new string that must be freed)
 char* string_list_join(const string_list* list, const char* separator) {
     if (!list || list->count == 0) {
-        return strdup("");
+        return str_dup("");
     }
     
     if (!separator) separator = "";

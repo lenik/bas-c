@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>  // for ssize_t
+#include "../base/str.h"
 
 #define FILEENT_LIST_DEFAULT_CAPACITY 16
 #define FILEENT_LIST_GROWTH_FACTOR 2
@@ -87,7 +88,7 @@ int fileent_list_append(fileent_list* list, const char* name, bool is_dir) {
         return 0;
     }
     
-    char* name_copy = strdup(name);
+    char* name_copy = str_dup(name);
     if (!name_copy) {
         return 0;
     }
@@ -107,7 +108,7 @@ int fileent_list_insert(fileent_list* list, size_t index, const char* name, bool
         return 0;
     }
     
-    char* name_copy = strdup(name);
+    char* name_copy = str_dup(name);
     if (!name_copy) {
         return 0;
     }

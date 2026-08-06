@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../base/str.h"
 
 /* Backtrace format: "=== Thread (current) ===" then "#0  0x... in ... at file:line" lines. */
 static bool is_backtrace_thread_header(const char *line) {
@@ -44,14 +45,14 @@ GList *backtrace_parse(FILE *in) {
     size_t cap = 0;
     thread_info_t *current = NULL;
 
-    while (getline(&line, &cap, in) > 0) {
+    while (str_getline(&line, &cap, in) > 0) {
         if (is_backtrace_thread_header(line)) {
             current = (thread_info_t *)calloc(1, sizeof(thread_info_t));
             if (!current) continue;
             current->thread_id = 0;
             current->lwp = 0;
             current->name = backtrace_thread_name_from_line(line);
-            if (!current->name) current->name = strdup("?");
+            if (!current->name) current->name = str_dup("?");
             current->frames = NULL;
             result = g_list_append(result, current);
             continue;

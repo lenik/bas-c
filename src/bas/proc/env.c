@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "../base/str.h"
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -56,7 +57,7 @@ char* path_find(const char* name) {
             mode_t mode = sb.st_mode;
             int xbits = mode & (S_IXUSR | S_IXGRP | S_IXOTH);
             if (xbits != 0)
-                return strdup(join);
+                return str_dup(join);
         }
 
         p += strlen(p) + 1;
@@ -214,9 +215,9 @@ char* self_exe_dup() {
     if (needed == 0)
         return NULL;
 
-    // 2. If it fit in the static buffer, strdup it
+    // 2. If it fit in the static buffer, str_dup it
     if (needed < size) {
-        return strdup(stack_buf);
+        return str_dup(stack_buf);
     }
 
     // 3. Otherwise, allocate the "needed" size and try again

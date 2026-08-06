@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "../base/str.h"
 
 // Hash table entry for prefix map
 typedef struct prefix_map_entry {
@@ -76,7 +77,7 @@ void prefix_map_add(prefix_map* map, const char* key, void* value) {
     entry_t* entry = malloc(sizeof(entry_t));
     if (!entry) return;
     
-    entry->key = strdup(key);
+    entry->key = str_dup(key);
     entry->value = value;
     entry->next = map->buckets[hash];
     map->buckets[hash] = entry;

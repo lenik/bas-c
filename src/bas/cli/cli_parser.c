@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../base/str.h"
 
 #define INITIAL_HANDLERS_CAPACITY 16
 
@@ -592,7 +593,7 @@ int cli_parser_set_alias(cli_parser_t* parser, const char* name, const char* val
         return -1;
     }
     
-    entry->value = strdup(value);
+    entry->value = str_dup(value);
     if (!entry->value) {
         free(entry);
         return -1;

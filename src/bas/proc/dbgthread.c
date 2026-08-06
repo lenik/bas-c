@@ -10,8 +10,6 @@
  *   -w/--interval <ms[unit]> (default 2s), -q/--quit (only way to stop).
  */
 
-#define _POSIX_C_SOURCE 200809L
-
 #include "dbgthread.h"
 
 #include "dbgaction.h"
@@ -19,6 +17,7 @@
 #include "format_gdb.h"
 #include "stackdump.h"
 
+#include "../base/str.h"
 #include "../cli/args.h"
 
 #define LOGGER_NAME dbg
@@ -607,7 +606,7 @@ static void *kbd_monitor_thread(void *arg) {
     while (!g_kbd_quit) {
         fputs("Dbg> ", stderr);
         fflush(stderr);
-        n = getline(&line, &cap, stdin);
+        n = str_getline(&line, &cap, stdin);
         if (n <= 0) {
             /* Ctrl-D / EOF: stop kbd thread */
             g_kbd_quit = 1;

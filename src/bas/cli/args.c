@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../base/str.h"
 
 #define ARGS_INITIAL_CAPACITY 16
 #define MAX_PATH 1024
@@ -325,7 +326,7 @@ static int expand_wildcard(const char* pattern, enum_fn* enum_func, void *enum_c
                     // Skip NULL entries (shouldn't happen, but be defensive)
                     continue;
                 }
-                match_array[valid_count] = strdup(str);  // Duplicate for caller ownership
+                match_array[valid_count] = str_dup(str);  // Duplicate for caller ownership
                 if (!match_array[valid_count]) {
                     // Free what we've allocated so far
                     for (size_t j = 0; j < valid_count; j++) {

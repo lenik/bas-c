@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../base/str.h"
 
 /* Parse "Thread 2 (Thread 0x7f1a8b0196c0 (LWP 3116497) \"pool-1\")" into thread_info_t. */
 thread_info_t *gdb_output_thread_info_parse(const char *line) {
@@ -56,7 +57,7 @@ stack_frame_t *gdb_output_stack_frame_parse(const char *line) {
 
     stack_frame_t *f = (stack_frame_t *)calloc(1, sizeof(stack_frame_t));
     if (!f) return NULL;
-    f->raw_line = strdup(line);
+    f->raw_line = str_dup(line);
     if (!f->raw_line) { stack_frame_free(f); return NULL; }
 
     /* #N - digits; if followed by 'x'/'X' and last digit is '0', then N is frame and rest is 0xADDR */
@@ -168,7 +169,7 @@ GList *gdb_output_parse(FILE *in) {
     size_t cap = 0;
     thread_info_t *current = NULL;
 
-    while (getline(&line, &cap, in) > 0) {
+    while (str_getline(&line, &cap, in) > 0) {
         if (is_gdb_noise_line(line)) continue;
 
         if (is_thread_header(line)) {
