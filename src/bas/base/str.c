@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 
 bool streq(const char *a, const char *b) {
@@ -11,6 +12,58 @@ bool streq(const char *a, const char *b) {
     if (a == NULL || b == NULL)
         return false;
     return strcmp(a, b) == 0;
+}
+
+char *str_dup(const char *s) {
+    size_t len;
+    char *copy;
+
+    if (!s)
+        return NULL;
+    len = strlen(s);
+    copy = malloc(len + 1);
+    if (!copy)
+        return NULL;
+    memcpy(copy, s, len + 1);
+    return copy;
+}
+
+long str_getline(char **lineptr, size_t *n, FILE *stream) {
+    size_t len = 0;
+    int ch;
+
+    if (!lineptr || !n || !stream)
+        return -1;
+
+    if (feof(stream))
+        return 0;
+
+    if (!*lineptr || *n == 0) {
+        *n = 128;
+        *lineptr = malloc(*n);
+        if (!*lineptr)
+            return -1;
+    }
+
+    while ((ch = fgetc(stream)) != EOF) {
+        if (len + 1 >= *n) {
+            size_t new_n = *n * 2;
+            char *p = realloc(*lineptr, new_n);
+            if (!p)
+                return -1;
+            *lineptr = p;
+            *n = new_n;
+        }
+        (*lineptr)[len++] = (char)ch;
+        if (ch == '\n')
+            break;
+    }
+
+    if (len == 0 && ch == EOF)
+        return 0;
+
+    (*lineptr)[len] = '\0';
+    return (long)len;
 }
 
 char *startswith(const char *s, const char *t) {

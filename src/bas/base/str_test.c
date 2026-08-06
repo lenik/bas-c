@@ -6,7 +6,7 @@
 void qstr_btok_test(char *s) {
     char *tok;
     int c = 0;
-    s = strdup(s);
+    s = str_dup(s);
 
     while (tok = qstr_btok(s, &s, false)) {
         printf(" <%s>", tok);
