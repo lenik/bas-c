@@ -113,7 +113,9 @@ thread_dep = dependency('threads')
 exe_inc = [include_directories('src')]
 
 # zlib is used for decompression, but we'll parse ZIP manually
+# _XOPEN_SOURCE: XSI APIs (realpath, etc.) under parent c_std=c99
 c_args = c_nowarn + [
+    '-D_XOPEN_SOURCE=700',
     '-DLOGGER_NAME=bas',
     '-DTEXT_DOMAIN=bas_c',
     '-DLOCALEDIR="@0@"'.format(localedir),
@@ -338,6 +340,7 @@ foreach app_src : app_sources
         dependencies: exe_deps + [bas_c_dep],
         include_directories: exe_inc,
         c_args: c_nowarn + [
+            '-D_XOPEN_SOURCE=700',
             '-DLOGGER_NAME=' + app_name,
             '-DTEXT_DOMAIN=bas_c',
             '-DLOCALEDIR="@0@"'.format(localedir),
@@ -546,6 +549,7 @@ foreach test_rel_path : all_test_files
         include_directories: exe_inc,
         dependencies: exe_deps + [bas_c_dep],
         c_args: c_nowarn + [
+            '-D_XOPEN_SOURCE=700',
             '-DLOGGER_NAME=test',
             '-DTEXT_DOMAIN=bas_c',
             '-DLOCALEDIR="@0@"'.format(localedir),
