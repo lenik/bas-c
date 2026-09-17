@@ -1,0 +1,47 @@
+= ppid(1)
+{project-author} <{project-email}>
+v{project-version}, {project-year}
+:doctype: manpage
+:manmanual: User Commands
+:mansource: ppid
+:man-linkstyle: blue R <>
+:nofooter:
+
+== NAME
+
+ppid - print parent process information
+
+== SYNOPSIS
+
+*ppid* [_options_]_ [PID ...]_
+
+== DESCRIPTION
+
+*ppid* prints information about the parent process (or processes) of the given _PID_(s). If no PID is specified, it operates on the current process.
+
+By default, *ppid* prints the numeric PID followed by the command line of the parent process, as obtained from */proc*. With the *-a* option it walks the process tree upwards, printing information for each ancestor until the root of the tree is reached.
+
+== OPTIONS
+
+*-s , --self*::
+  Show information about the specified process itself instead of its parent. When no PID is given, this means the current process.
+*-a , --all*::
+  Show information for all parent processes, recursively walking up the process tree.
+*-q , --quiet*::
+  Produce less verbose log output.
+*-v , --verbose*::
+  Produce more verbose log output.
+*--version*::
+  Show version information and exit.
+
+== EXIT STATUS
+
+The *ppid* utility exits with status 0 on success. A non-zero exit status indicates an error, such as an invalid PID or failure to read information from */proc*.
+
+== NOTES
+
+This utility relies on the Linux */proc* filesystem and is therefore specific to Linux systems.
+
+== SEE ALSO
+
+*ps*(1), *pstree*(1), *proc*(5)
