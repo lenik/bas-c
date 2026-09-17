@@ -1,5 +1,26 @@
 # warning_level=1: Meson < 0.40 rejects warning_level=0; -w still used via c_args.
-project('bas-c', 'c', version: '1.0.1', default_options: ['warning_level=1'])
+project('bas-c', 'c', version: run_command(
+        'sh',
+        '-c', '''
+        v=$(
+            command -v zfr >/dev/null 2>&1 && zfr version 2>/dev/null || true
+        )
+        if [ -z "$v" ] && [ -f VERSION ]; then
+            v=$(head -n1 VERSION | tr -d '\r')
+            v=${v#v}
+        fi
+        if [ -z "$v" ]; then
+            v="0.0.0" # FIXED TO 0.0.0, DO NOT MODIFY
+        fi
+        printf '%s' "$v"
+        ''',
+        check: false,
+    ).stdout().strip(), default_options: ['warning_level=1'],
+    license: 'AGPL-3.0-or-later')
+project_author = 'Lenik (谢继雷)'
+project_email = 'lenik@bodz.net'
+project_year = 2026
+
 
 # Feature gates (Meson version).
 # - string path `/` operator: since 0.49.0
@@ -366,8 +387,7 @@ endif
 if find_man_ok and find_man_out != ''
     foreach line : find_man_out.split('\n')
         if line != ''
-            install_man(line)
-        endif
+                    endif
     endforeach
 endif
 
@@ -599,3 +619,42 @@ if meson.version().version_compare('>=0.50.0')
     )
 endif
 
+
+asciidoctor = find_program('asciidoctor', required: true)
+
+run_target(
+    'look',
+    command: [
+        'bash',
+        '-euc', '''
+            tmpdir=$(mktemp -d)
+            DESTDIR=$tmpdir meson install -C "@BUILD_ROOT@"
+            tree "$tmpdir"
+            rm -fr "$tmpdir"
+        ''',
+    ],
+)
+
+puffs = [
+    'ppid',
+]
+foreach puff : puffs
+  custom_target(
+    puff + '-man',
+    input: 'man' / (puff + '.adoc'),
+    output: puff + '.1',
+    command: [
+      asciidoctor,
+      '-b', 'manpage',
+      '-a', 'project-version=' + meson.project_version(),
+      '-a', 'project-year=@0@'.format(project_year),
+      '-a', 'project-author=' + project_author,
+      '-a', 'project-email=' + project_email,
+      '-o', '@OUTPUT@',
+      '@INPUT@',
+    ],
+    build_by_default: true,
+    install: true,
+    install_dir: mandir / 'man1',
+  )
+endforeach

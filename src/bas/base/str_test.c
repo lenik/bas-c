@@ -2,6 +2,9 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <bas/locale/i18n.h>
+#include <bas/proc/env.h>
+
 
 void qstr_btok_test(char *s) {
     char *tok;
@@ -19,6 +22,8 @@ void qstr_btok_test(char *s) {
 }
 
 int main() {
+    const char *exe = self_exe();
+    init_i18n(LOCALEDIR);
     qstr_btok_test("hello");
     qstr_btok_test("   hello, world   ");
     qstr_btok_test("foo   'bar  baz'    end");

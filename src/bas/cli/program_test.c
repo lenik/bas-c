@@ -1,5 +1,8 @@
 #include "program.h"
 #include <bas/log/uselog.h>
+#include <bas/locale/i18n.h>
+#include <bas/proc/env.h>
+
 
 static GOptionEntry options[] = {
     { "force",     'f', 0, G_OPTION_ARG_NONE, &opt_force,
@@ -25,6 +28,8 @@ gboolean parse_option(const char *opt, const char *val, parse_options_ctx *ctx) 
 }
 
 int main(int argc, char **argv) {
+    const char *exe = self_exe();
+    init_i18n(LOCALEDIR);
     program_title = "Show line numbers";
     program_help_args = "FILES";
 

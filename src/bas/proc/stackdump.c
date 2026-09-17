@@ -17,6 +17,13 @@
 #include <string.h>
 #include <unistd.h>
 
+// Handle platform compatibility
+#ifdef _WIN32
+#define strcasecmp _stricmp
+#else
+#include <strings.h>
+#endif
+
 #define ANSI_RESET   "\033[0m"
 #define ANSI_BOLD    "\033[1m"
 #define ANSI_CYAN    "\033[36m"
@@ -247,11 +254,30 @@ void stackdump_pid(int target_pid, const char *file, const stackdump_color_schem
 static char g_crash_dump_path[CRASH_DUMP_PATH_MAX];
 static stackdump_color_schema_t *g_color_schema = NULL;
 
+enum StackdumpMode {
+    Highlighted,
+    RawFast,
+};
+
 static void crash_handler(int sig) {
     pid_t crashed_pid = getpid();
     pid_t child = fork();
     if (child == 0) {
-        if (g_interactive) {
+        
+        enum StackdumpMode mode = g_interactive ? Highlighted : RawFast;
+
+        const char *stackdump_env = getenv("STACKDUMP");
+        if (stackdump_env != NULL) {
+            if (strcasecmp(stackdump_env, "highlight") == 0) {
+                mode = Highlighted;
+            } else if (strcasecmp(stackdump_env, "raw") == 0
+                    || strcasecmp(stackdump_env, "fast") == 0) {
+                mode = RawFast;
+            }
+        }
+        fprintf(stderr, "mode: %s\n", mode == Highlighted?"highlighted" : "raw");
+
+        if (mode == Highlighted) {
             /* In interactive mode: dump to temp file, then print highlighted stacktrace to stdout. */
             char gdb_file[PATH_MAX];
             (void)stackdump_gdb_pid(crashed_pid, g_crash_dump_path, g_color_schema);
@@ -286,7 +312,7 @@ void stackdump_install_crash_handler(const stackdump_color_schema_t *s) {
     sigaction(SIGABRT, &sa, NULL);
     sigaction(SIGBUS, &sa, NULL);
     sigaction(SIGFPE, &sa, NULL);
-    fprintf(stderr, "stackdump: crash handler installed -> %s\n", g_crash_dump_path);
+    /* fprintf(stderr, "stackdump: crash handler installed -> %s\n", g_crash_dump_path); */
 }
 
 void stackdump_set_interactive(int interactive) {

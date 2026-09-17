@@ -1,3 +1,15 @@
+bas-c (1.1.0) testing; urgency=medium
+
+  * Align packaging with zephyr/clib: LICENSE, AsciiDoc man pages, meson
+    version/license metadata, debian source format/copyright, and multi-
+    distro packaging stubs.
+  * stackdump: honor STACKDUMP=highlight|raw|fast for crash-handler dump
+    mode; quiet install banner.
+  * Wire L1 gettext locales (es_MX, ar) and bas i18n init in unit-test
+    mains.
+
+ -- Lenik (谢继雷) <lenik@bodz.net>  Thu, 17 Sep 2026 15:39:10 +0900
+
 bas-c (1.0.1) testing; urgency=medium
 
   * bas-c-static.pc: link libbas-c.a by path instead of -lbas-c so static
