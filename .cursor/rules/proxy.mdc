@@ -18,6 +18,10 @@ export HTTP_PROXY=http://localhost:8118
 export HTTPS_PROXY=http://localhost:8118
 ```
 
+- **`gh` always**: set the proxy env above before every `gh` invocation
+  (`auth`, `api`, `release`, …). Git SSH push does not need it; GitHub
+  REST/GraphQL via `gh` does. Same for `zfr publish` / `zfr release` (they
+  call `gh`).
 - CLI example: `googletranslator` and similar fetchers — pass/configure
   **`http-proxy http://localhost:8118`** (see also translations.mdc for adoc).
 - Do not assume raw access to blocked hosts will work; set the proxy first.
