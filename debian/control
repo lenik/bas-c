@@ -15,7 +15,6 @@ Build-Depends:
  libicu-dev,
  ninja-build,
  asciidoctor
-
 Standards-Version: 4.7.2
 Homepage: http://uni.bodz.net/lib/libbas-c
 Vcs-Git: git://git.bodz.net/uni.git
