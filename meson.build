@@ -48,6 +48,7 @@ if meson_has_path_op
     localedir = prefix / get_option('localedir')
     includedir = prefix / get_option('includedir')
     libdir = prefix / get_option('libdir')
+    mandir = prefix / get_option('mandir')
     pkgdatadir = datadir / meson.project_name()
     pkgdocdir = datadir / 'doc' / 'libbas-c'
     bash_completions_dir = datadir / 'bash-completion' / 'completions'
@@ -60,6 +61,7 @@ else
     localedir = join_paths(prefix, get_option('localedir'))
     includedir = join_paths(prefix, get_option('includedir'))
     libdir = join_paths(prefix, get_option('libdir'))
+    mandir = join_paths(prefix, get_option('mandir'))
     pkgdatadir = join_paths(datadir, meson.project_name())
     pkgdocdir = join_paths(datadir, 'doc', 'libbas-c')
     bash_completions_dir = join_paths(datadir, 'bash-completion', 'completions')
