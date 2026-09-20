@@ -10,21 +10,22 @@ Release:        1%{?dist}
 Summary:        C base library (runtime)
 
 License:        AGPL-3.0-or-later
-URL:            https://github.com/lenik/zephyr
-Packager:       Lenik (谢继雷) <lenik@bodz.net>
+URL:            https://github.com/lenik/bas-c
+Packager:       Lenik (谢继雷) <bas-c@bodz.net>
 Source0:        %{name}-%{srcversion}.tar.xz
 
 BuildRequires:  meson
-BuildRequires:  pkg-config
-BuildRequires:  bash-builtins
-BuildRequires:  libglib2.0-dev
-BuildRequires:  libcurl4-openssl-dev
-BuildRequires:  libssl-dev
-BuildRequires:  zlib1g-dev
-BuildRequires:  libicu-dev
 BuildRequires:  ninja-build
+BuildRequires:  pkgconf
+BuildRequires:  gcc
+BuildRequires:  gcc-c++
+BuildRequires:  glib2-devel
+BuildRequires:  libcurl-devel
+BuildRequires:  openssl-devel
+BuildRequires:  zlib-devel
+BuildRequires:  libicu-devel
+BuildRequires:  gettext
 BuildRequires:  asciidoctor
-BuildRequires:  libbas-c-dev
 
 %description
 Shared library providing base utilities: CLI (program/options), logging,
@@ -37,6 +38,7 @@ process helpers, I/O, and bash loadable builtin support.
 meson setup build \
     --prefix=%{_prefix} \
     --bindir=%{_bindir} \
+    --libdir=%{_libdir} \
     --datadir=%{_datadir} \
     --mandir=%{_mandir} \
     --sysconfdir=%{_sysconfdir} \
@@ -48,12 +50,24 @@ meson compile -C build
 meson install -C build --destdir=%{buildroot}
 
 %files
-%{_mandir}/man1/ppid.1*
+%{_bindir}/*
+%{_libdir}/libbas-c.so*
+%{_libdir}/libbas-bash.so*
+%{_libdir}/pkgconfig/bas-c.pc
+%{_libdir}/pkgconfig/bas-c-static.pc
+%{_includedir}/bas/
 %{_datadir}/bas-c/
-%{_datadir}/locale/*/LC_MESSAGES/bas_c.mo
+%{_datadir}/bash-completion/completions/*
+%{_mandir}/man1/*
+%{_datadir}/locale/*/LC_MESSAGES/*
 %{_datadir}/doc/bas-c/
+%{_datadir}/doc/libbas-c/
 
 %changelog
+* Sun Sep 20 2026 Lenik (谢继雷) <bas-c@bodz.net>
+- Use RHEL-style BuildRequires; ship libraries/headers in %%files.
+- Drop circular libbas-c-dev BuildRequires.
+
 * Thu Aug 20 2026 Lenik (谢继雷) <lenik@bodz.net>
 - Align spec with debian/control (Meson, AGPL-3.0-or-later).
 - Version comes from `zfr version`, the same method meson.build uses.

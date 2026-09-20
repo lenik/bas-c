@@ -510,6 +510,9 @@ all_test_files = [
     'bas/log/log_test.c',
 ]
 
+# Hoist find_program out of the foreach (Meson can mis-handle it inside loops).
+includes_prog = find_program('includes', required: false)
+
 foreach test_rel_path : all_test_files
     test_c = 'src/' + test_rel_path
 
@@ -521,19 +524,13 @@ foreach test_rel_path : all_test_files
         test_name = test_file.split('.')[0]
     endif
 
-    if meson_has_run_check
-        includes_result = run_command('includes', '-e', '-c', test_c, check: false)
+    if includes_prog.found()
+        includes_result = run_command(includes_prog, '-e', '-c', test_c, check: false)
         includes_ok = includes_result.returncode() == 0
         includes_out = includes_result.stdout()
     else
-        includes_result = run_command(
-            'sh', '-c',
-            'includes -e -c "$1" 2>/dev/null || true',
-            'sh',
-            test_c,
-        )
-        includes_ok = true
-        includes_out = includes_result.stdout()
+        includes_ok = false
+        includes_out = ''
     endif
 
     impl_deps = []

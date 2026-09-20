@@ -7,6 +7,15 @@ bas-c (1.1.0) testing; urgency=medium
     mode; quiet install banner.
   * Wire L1 gettext locales (es_MX, ar) and bas i18n init in unit-test
     mains.
+  * Add GitHub Actions release-packages workflow: Debian/RHEL matrix via
+    Docker, attach zips to the GitHub Release, optional s1 dput/rpm
+    publish.
+  * Fix packaging/rpm/bas-c.spec: RHEL BuildRequires and ship
+    libraries/headers in %files.
+  * meson: treat missing includes(1) as optional so clean Debian builds
+    work.
+  * CI: install peer Build-Depends from REPODEB_URL (repodeb_aptly);
+    anonymous HTTP publish.
 
  -- Lenik (谢继雷) <lenik@bodz.net>  Thu, 17 Sep 2026 15:39:10 +0900
 
