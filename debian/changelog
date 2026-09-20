@@ -1,3 +1,14 @@
+bas-c (1.1.1) stable; urgency=medium
+
+  * debian/changelog: use distribution stable (urgency=medium) going
+    forward.
+  * CI: publish debs to aptly suite matching the build distro (ignore
+    changelog stable); use component contrib.
+  * CI: fix release-packages workflow YAML (quote input descriptions with
+    colons) so multi-arch matrix runs.
+
+ -- Lenik (谢继雷) <lenik@bodz.net>  Sun, 20 Sep 2026 21:52:25 +0800
+
 bas-c (1.1.0) testing; urgency=medium
 
   * Align packaging with zephyr/clib: LICENSE, AsciiDoc man pages, meson

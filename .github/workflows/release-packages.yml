@@ -12,11 +12,11 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Existing release tag to upload into (default: latest)
+        description: "Existing release tag to upload into (default: latest)"
         required: false
         type: string
       dep_tag:
-        description: Dependency release tag to install (default: latest)
+        description: "Dependency release tag to install (default: latest)"
         required: false
         type: string
 
@@ -86,7 +86,9 @@ jobs:
         env:
           CI_DEPS_DIR: ${{ github.workspace }}/ci-deps
           REPODEB_URL: ${{ secrets.REPODEB_URL }}
-          REPODEB_SUITE: ${{ secrets.REPODEB_SUITE }}
+          # Always the matrix distro (trixie/bookworm/…); ignore changelog "stable".
+          REPODEB_SUITE: ${{ matrix.release }}
+          REPODEB_COMPONENT: contrib
         run: |
           ./scripts/ci/build-deb.sh \
             "${{ matrix.image }}" \

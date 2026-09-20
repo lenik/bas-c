@@ -79,7 +79,9 @@ docker run --rm --platform "$PLATFORM" \
   -e "HTTPS_PROXY=${HTTPS_PROXY_D}" \
   -e no_proxy -e NO_PROXY \
   -e "REPODEB_URL=${REPODEB_URL:-}" \
-  -e "REPODEB_SUITE=${REPODEB_SUITE:-}" \
+  -e "REPODEB_SUITE=${REPODEB_SUITE:-$RELEASE}" \
+  -e "REPODEB_COMPONENT=${REPODEB_COMPONENT:-contrib}" \
+  -e "BUILD_SUITE=${RELEASE}" \
   "$IMAGE" \
   bash -lc '
 set -euo pipefail
@@ -87,13 +89,12 @@ apt-get update -qq
 apt-get install -y -qq --no-install-recommends \
   build-essential debhelper devscripts dpkg-dev fakeroot equivs ca-certificates
 # Prefer private apt (repodeb_aptly) for peer Build-Depends — never nested-build.
+# Suite comes from the CI matrix release (trixie/bookworm/…), not changelog
+# "stable".
 if [ -n "${REPODEB_URL:-}" ]; then
-  suite=${REPODEB_SUITE:-}
-  if [ -z "$suite" ] && [ -f debian/changelog ]; then
-    suite=$(sed -n "s/^[^ ]* ([^)]*) \([^;]*\);.*/\1/p" debian/changelog | head -1 | awk "{print \$1}")
-  fi
-  suite=${suite:-testing}
-  echo "deb [trusted=yes] ${REPODEB_URL%/}/ ${suite} main" \
+  suite=${REPODEB_SUITE:-${BUILD_SUITE:-trixie}}
+  component=${REPODEB_COMPONENT:-contrib}
+  echo "deb [trusted=yes] ${REPODEB_URL%/}/ ${suite} ${component}" \
     > /etc/apt/sources.list.d/repodeb.list
   apt-get update -qq || true
 fi
@@ -113,6 +114,14 @@ if ! pkg-config --exists bash-builtins 2>/dev/null; then
   fi
 fi
 dpkg-buildpackage -us -uc -b
+# Changelog says "stable"; aptly must receive the real build suite.
+suite=${BUILD_SUITE:-}
+if [ -n "$suite" ]; then
+  for ch in /work/*.changes; do
+    [ -f "$ch" ] || continue
+    sed -i "s/^Distribution:.*/Distribution: ${suite}/" "$ch"
+  done
+fi
 '
 
 shopt -s nullglob
