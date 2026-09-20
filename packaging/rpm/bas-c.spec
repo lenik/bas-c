@@ -52,20 +52,20 @@ meson install -C build --destdir=%{buildroot}
 %files
 %{_bindir}/*
 %{_libdir}/libbas-c.so*
+%{_libdir}/libbas-c.a
 %{_libdir}/libbas-bash.so*
 %{_libdir}/pkgconfig/bas-c.pc
 %{_libdir}/pkgconfig/bas-c-static.pc
 %{_includedir}/bas/
 %{_datadir}/bas-c/
 %{_datadir}/bash-completion/completions/*
-%{_mandir}/man1/*
-%{_datadir}/locale/*/LC_MESSAGES/*
-%{_datadir}/doc/bas-c/
+%{_mandir}/man1/ppid.1*
+%{_datadir}/locale/*/LC_MESSAGES/*.mo
 %{_datadir}/doc/libbas-c/
 
 %changelog
 * Sun Sep 20 2026 Lenik (谢继雷) <bas-c@bodz.net>
-- Use RHEL-style BuildRequires; ship libraries/headers in %%files.
+- Use RHEL-style BuildRequires; ship libraries/headers in the RPM file list.
 - Drop circular libbas-c-dev BuildRequires.
 
 * Thu Aug 20 2026 Lenik (谢继雷) <lenik@bodz.net>

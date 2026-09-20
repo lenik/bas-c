@@ -21,6 +21,11 @@ all:
 
 local: $(ARTIFACT)
 
+# Cross builds need mingw pkg-config deps (glib, …). Without them, skip
+# cleanly so `zfr publish` can still ship deb/rpm on Linux hosts.
+MINGW_PKG_CONFIG := $(shell command -v x86_64-w64-mingw32-pkg-config 2>/dev/null || command -v i686-w64-mingw32-pkg-config 2>/dev/null)
+MINGW_HAS_GLIB := $(shell if [ -n "$(MINGW_PKG_CONFIG)" ] && "$(MINGW_PKG_CONFIG)" --exists glib-2.0 2>/dev/null; then echo 1; fi)
+
 stage:
 	rm -rf "$(STAGE)" "$(BUILD)"
 	mkdir -p "$(STAGE)" "$(BUILD)"
@@ -29,17 +34,25 @@ stage:
 	if [ -n "$$OS" ] && [ "$$OS" = Windows_NT ]; then \
 		meson setup "$(BUILD)" --prefix=/ --buildtype=release; \
 	elif [ -n "$(MINGW_CC)" ]; then \
+		if [ -z "$(MINGW_HAS_GLIB)" ]; then \
+			echo "mingw: skip stage (no mingw glib-2.0 via pkg-config)" >&2; \
+			exit 0; \
+		fi; \
 		meson setup "$(BUILD)" --cross-file "$(CROSS)" --prefix=/ --buildtype=release; \
 	else \
 		echo "mingw: need MSYS/MinGW or x86_64-w64-mingw32-gcc" >&2; \
 		exit 1; \
-	fi
-	meson compile -C "$(BUILD)"
+	fi; \
+	meson compile -C "$(BUILD)"; \
 	DESTDIR="$(STAGE)" meson install -C "$(BUILD)"
 
 $(ARTIFACT): stage
 	mkdir -p "$(OUTDIR)"
 	@set -e; \
+	if [ ! -d "$(STAGE)" ] || [ -z "$$(find "$(STAGE)" -type f 2>/dev/null | head -1)" ]; then \
+		echo "mingw: skip artifact (empty stage)" >&2; \
+		exit 0; \
+	fi; \
 	exes=$$(find "$(STAGE)" -type f -name '*.exe' | sort); \
 	n=$$(printf '%s\n' "$$exes" | sed '/^$$/d' | wc -l); \
 	if [ "$$n" -eq 1 ]; then \
@@ -56,8 +69,8 @@ $(ARTIFACT): stage
 	else \
 		echo "mingw: no .exe in stage and no 7z/zip to pack" >&2; \
 		exit 1; \
-	fi
-	@echo "$(ARTIFACT)"
+	fi; \
+	echo "$(ARTIFACT)"
 
 exe: $(ARTIFACT)
 

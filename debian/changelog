@@ -16,6 +16,10 @@ bas-c (1.1.0) testing; urgency=medium
     work.
   * CI: install peer Build-Depends from REPODEB_URL (repodeb_aptly);
     anonymous HTTP publish.
+  * RPM %files: only ship doc/libbas-c (matches meson install_dir).
+  * mingw: skip cleanly when cross glib-2.0 is unavailable.
+  * RPM %files: include libbas-c.a and all locale *.mo (variant
+    catalogs).
 
  -- Lenik (谢继雷) <lenik@bodz.net>  Thu, 17 Sep 2026 15:39:10 +0900
 
