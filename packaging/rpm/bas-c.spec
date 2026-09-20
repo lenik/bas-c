@@ -26,6 +26,9 @@ BuildRequires:  zlib-devel
 BuildRequires:  libicu-devel
 BuildRequires:  gettext
 BuildRequires:  asciidoctor
+# Debian Build-Depends "bash-builtins" maps to bash (ships bash.pc);
+# CI aliases bash.pc → bash-builtins.pc for Meson.
+BuildRequires:  bash
 
 %description
 Shared library providing base utilities: CLI (program/options), logging,
