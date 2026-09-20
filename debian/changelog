@@ -1,3 +1,10 @@
+bas-c (1.1.3) stable; urgency=medium
+
+  * CI: fix bullseye-security apt sources; map bash.pc for RPM builds.
+    CI: drop buster/el7 (incompatible with current packaging).
+
+ -- Lenik (谢继雷) <lenik@bodz.net>  Sun, 20 Sep 2026 22:36:58 +0800
+
 bas-c (1.1.2) stable; urgency=medium
 
   * CI: archive.debian.org for EOL suites; EPEL/pip meson for RPM
