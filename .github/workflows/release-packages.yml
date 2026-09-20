@@ -161,7 +161,8 @@ jobs:
 
   publish-private:
     needs: [deb, rpm]
-    if: always() && (needs.deb.result == 'success' || needs.rpm.result == 'success')
+    # Matrix jobs report failure if any cell fails; still publish successful zips.
+    if: always() && !cancelled() && (contains(fromJSON('["success","failure"]'), needs.deb.result) || contains(fromJSON('["success","failure"]'), needs.rpm.result))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -67,9 +67,25 @@ elif command -v yum >/dev/null 2>&1; then
 else
   echo "no dnf/yum" >&2; exit 1
 fi
-$PM -y install rpm-build rpmdevtools meson ninja-build pkgconf gcc gcc-c++ make \
-  tar xz which \
+# CentOS 7 vault (mirrors are EOL).
+if [[ "${EL}" == "7" ]] && [[ -f /etc/yum.repos.d/CentOS-Base.repo ]]; then
+  sed -i \
+    -e "s|^mirrorlist=|#mirrorlist=|g" \
+    -e "s|^#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g" \
+    /etc/yum.repos.d/CentOS-*.repo || true
+fi
+$PM -y install epel-release 2>/dev/null || true
+if command -v dnf >/dev/null 2>&1; then
+  $PM -y install dnf-plugins-core 2>/dev/null || true
+  $PM config-manager --set-enabled crb 2>/dev/null || \
+    $PM config-manager --set-enabled powertools 2>/dev/null || true
+fi
+$PM -y install rpm-build rpmdevtools pkgconf gcc gcc-c++ make \
+  tar xz which python3 python3-pip \
   openssl-devel zlib-devel || true
+# meson/ninja: distro packages (EPEL/CRB) or pip fallback.
+$PM -y install meson ninja-build 2>/dev/null \
+  || pip3 install --no-cache-dir meson ninja
 # Optional deps used by bas-c / similar C libs (ignore if unavailable).
 $PM -y install glib2-devel libcurl-devel libicu-devel rubygem-asciidoctor asciidoctor \
   gettext gettext-devel bash 2>/dev/null || true
@@ -77,6 +93,8 @@ $PM -y install glib2-devel libcurl-devel libicu-devel rubygem-asciidoctor asciid
 if ls /rpmbuild/deps/*.rpm >/dev/null 2>&1; then
   $PM -y install /rpmbuild/deps/*.rpm || rpm -Uvh --nodeps /rpmbuild/deps/*.rpm || true
 fi
+command -v meson >/dev/null
+command -v ninja >/dev/null || command -v ninja-build >/dev/null
 rpmbuild --define "_topdir /rpmbuild" -bb /rpmbuild/SPECS/${NAME}.spec || \
   rpmbuild --define "_topdir /rpmbuild" --nodeps -bb /rpmbuild/SPECS/${NAME}.spec
 '

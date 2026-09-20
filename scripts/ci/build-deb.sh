@@ -85,8 +85,26 @@ docker run --rm --platform "$PLATFORM" \
   "$IMAGE" \
   bash -lc '
 set -euo pipefail
+suite=${BUILD_SUITE:-}
+# EOL / archive suites: official mirrors drop Release files.
+case "$suite" in
+  buster|stretch|jessie)
+    printf "%s\n" \
+      "deb http://archive.debian.org/debian ${suite} main contrib non-free" \
+      "deb http://archive.debian.org/debian-security ${suite}/updates main contrib non-free" \
+      > /etc/apt/sources.list
+    rm -f /etc/apt/sources.list.d/*
+    printf "%s\n" "Acquire::Check-Valid-Until \"false\";" \
+      > /etc/apt/apt.conf.d/99archive
+    ;;
+  bullseye)
+    # Stale security indexes in the image → 404; force a full refresh.
+    apt-get clean
+    rm -rf /var/lib/apt/lists/*
+    ;;
+esac
 apt-get update -qq
-apt-get install -y -qq --no-install-recommends \
+apt-get install -y -qq --no-install-recommends --fix-missing \
   build-essential debhelper devscripts dpkg-dev fakeroot equivs ca-certificates
 # Prefer private apt (repodeb_aptly) for peer Build-Depends — never nested-build.
 # Suite comes from the CI matrix release (trixie/bookworm/…), not changelog
@@ -103,7 +121,7 @@ if ls /work/deps/*.deb >/dev/null 2>&1; then
   dpkg -i /work/deps/*.deb || apt-get -y -f install
 fi
 if [ -f debian/control ]; then
-  mk-build-deps -i -r -t "apt-get -y -qq --no-install-recommends"
+  mk-build-deps -i -r -t "apt-get -y -qq --no-install-recommends --fix-missing"
 fi
 # Debian ships bash.pc; many projects expect the bash-builtins module name.
 if ! pkg-config --exists bash-builtins 2>/dev/null; then
