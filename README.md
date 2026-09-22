@@ -37,7 +37,6 @@ Core utilities built on GLib:
 | **Logging** | Logger with levels, syslog integration, structured logging |
 | **Process Helpers** | PID, PPID, environment variables, process info |
 | **I/O** | File operations, path handling, file entity lists, wide strings |
-| **Bash Support** | `libbas-bash` loadable builtin support |
 
 ### 🔧 Applications
 
@@ -166,7 +165,7 @@ int main(int argc, char *argv[]) {
 |---------|-------------|
 | **libbas-c1** | Shared library (runtime) |
 | **libbas-c-dev** | Development headers and documentation |
-| **bas-c** | Command-line tools (ppid, man pages, completions) + `libbas-bash` |
+| **bas-c** | Command-line tools (ppid, man pages, completions) |
 
 ---
 

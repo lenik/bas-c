@@ -56,8 +56,6 @@ meson install -C build --destdir=%{buildroot}
 %{_bindir}/*
 %{_libdir}/libbas-c.so*
 %{_libdir}/libbas-c.a
-# libbas-bash is optional when bash loadable headers are absent
-%{_libdir}/libbas-bash.so*
 %{_libdir}/pkgconfig/bas-c.pc
 %{_libdir}/pkgconfig/bas-c-static.pc
 %{_includedir}/bas/

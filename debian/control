@@ -7,7 +7,6 @@ Build-Depends:
  debhelper-compat (= 13),
  meson,
  pkg-config,
- bash-builtins,
  libglib2.0-dev,
  libcurl4-openssl-dev,
  libssl-dev,
