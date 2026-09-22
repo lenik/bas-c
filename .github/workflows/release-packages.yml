@@ -272,44 +272,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -euo pipefail
+          chmod +x scripts/ci/verify-release-assets.sh
           TAG="${{ github.event.release.tag_name || inputs.tag }}"
           if [ -z "$TAG" ]; then
             TAG=$(gh release list -L 1 --json tagName -q '.[0].tagName')
           fi
-          NAME=$(basename "$PWD")
-          assets=$(gh release view "$TAG" --json assets -q '.assets[].name' | sort)
-          echo "$assets"
-          missing=0
-          while read -r kind release arch; do
-            [ -z "$kind" ] && continue
-            case "$kind" in
-              deb) want="${NAME}-debian-${release}-${arch}.zip" ;;
-              rpm) want="${NAME}-el-${release}-${arch}.zip" ;;
-              mingw) want="${NAME}-mingw-${arch}.zip" ;;
-              ucrt) want="${NAME}-ucrt-${arch}.zip" ;;
-              *) continue ;;
-            esac
-            if ! echo "$assets" | grep -qxF "$want"; then
-              echo "MISSING: $want"
-              missing=$((missing + 1))
-            else
-              echo "OK: $want"
-            fi
-          done < <(python3 - <<'PY'
-import json
-from pathlib import Path
-data = json.loads(Path("scripts/ci/matrix.json").read_text())
-for kind, key in (("deb", "deb"), ("rpm", "rpm"), ("mingw", "mingw"), ("ucrt", "ucrt")):
-    for cell in data.get(key) or []:
-        print(kind, cell["release"] if kind in ("deb", "rpm") else cell.get("release", ""), cell["arch"])
-PY
-)
-          if [ "$missing" -gt 0 ]; then
-            echo "verify: $missing matrix package(s) missing from release $TAG" >&2
-            exit 1
-          fi
-          echo "verify: all matrix packages present on $TAG"
+          ./scripts/ci/verify-release-assets.sh "$TAG"
       - name: Publish to private repos
         env:
           S1_HOST: ${{ secrets.S1_HOST }}
@@ -322,11 +290,11 @@ PY
           REPONUPKG_URL: ${{ secrets.REPONUPKG_URL }}
           REPONUPKG_TOKEN: ${{ secrets.REPONUPKG_TOKEN }}
           REPONUPKG_OWNER: ${{ secrets.REPONUPKG_OWNER }}
-          REPONUGET_URL: ${{ secrets.REPONUPKG_URL || secrets.REPONUGET_URL }}
-          REPONUGET_API_KEY: ${{ secrets.REPONUPKG_TOKEN || secrets.REPONUGET_API_KEY }}
-          RPM_REPO_URL: ${{ secrets.REPORPM_URL || secrets.RPM_REPO_URL }}
-          RPM_REPO_USER: ${{ secrets.REPORPM_USER || secrets.RPM_REPO_USER }}
-          RPM_REPO_PASS: ${{ secrets.REPORPM_PASS || secrets.RPM_REPO_PASS }}
+          REPONUGET_URL: '${{ secrets.REPONUPKG_URL || secrets.REPONUGET_URL }}'
+          REPONUGET_API_KEY: '${{ secrets.REPONUPKG_TOKEN || secrets.REPONUGET_API_KEY }}'
+          RPM_REPO_URL: '${{ secrets.REPORPM_URL || secrets.RPM_REPO_URL }}'
+          RPM_REPO_USER: '${{ secrets.REPORPM_USER || secrets.RPM_REPO_USER }}'
+          RPM_REPO_PASS: '${{ secrets.REPORPM_PASS || secrets.RPM_REPO_PASS }}'
         run: |
           chmod +x scripts/ci/*.sh
           sudo apt-get update -qq
