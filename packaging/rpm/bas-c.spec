@@ -13,8 +13,7 @@ License:        AGPL-3.0-or-later
 URL:            https://github.com/lenik/bas-c
 Packager:       Lenik (谢继雷) <bas-c@bodz.net>
 Source0:        %{name}-%{srcversion}.tar.xz
-Patch0:         bash-prefer-bash-pc.patch
-# RPM-only: prefer bash.pc (RHEL) then bash-builtins.pc (Debian module name).
+# RPM-only patches live under packaging/rpm/*.patch (none required currently).
 
 BuildRequires:  meson
 BuildRequires:  ninja-build
@@ -28,7 +27,7 @@ BuildRequires:  zlib-devel
 BuildRequires:  libicu-devel
 BuildRequires:  gettext
 BuildRequires:  asciidoctor
-# Debian Build-Depends "bash-builtins" → bash (ships bash.pc); Patch0 teaches Meson.
+# Debian Build-Depends "bash-builtins" → bash + staged headers (see build-rpm).
 BuildRequires:  bash
 
 %description
@@ -57,6 +56,7 @@ meson install -C build --destdir=%{buildroot}
 %{_bindir}/*
 %{_libdir}/libbas-c.so*
 %{_libdir}/libbas-c.a
+# libbas-bash is optional when bash loadable headers are absent
 %{_libdir}/libbas-bash.so*
 %{_libdir}/pkgconfig/bas-c.pc
 %{_libdir}/pkgconfig/bas-c-static.pc

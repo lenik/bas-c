@@ -122,7 +122,7 @@ if command -v dnf >/dev/null 2>&1; then
     $PM config-manager --set-enabled powertools 2>/dev/null || true
 fi
 $PM -y install rpm-build rpmdevtools pkgconf gcc gcc-c++ make \
-  tar xz which python3 python3-pip \
+  tar xz which python3 python3-pip curl ca-certificates binutils \
   openssl-devel zlib-devel bash || true
 # meson/ninja: distro packages (EPEL/CRB) or pip fallback.
 $PM -y install meson ninja-build 2>/dev/null \
@@ -169,6 +169,59 @@ if ls /rpmbuild/deps/*.rpm >/dev/null 2>&1; then
 fi
 command -v meson >/dev/null
 command -v ninja >/dev/null || command -v ninja-build >/dev/null
+
+# RHEL/Rocky bash RPM omits loadable headers; reuse Debian bash-builtins
+# include tree (headers are portable enough to compile libbas-bash).
+if [[ ! -f /usr/include/bash/builtins.h ]]; then
+  deb_url="http://deb.debian.org/debian/pool/main/b/bash/bash-builtins_5.2.37-2+b5_amd64.deb"
+  # Fallback candidates if the exact revision moves.
+  for deb_url in \
+      "http://deb.debian.org/debian/pool/main/b/bash/bash-builtins_5.2.15-2+b13_amd64.deb" \
+      "http://deb.debian.org/debian/pool/main/b/bash/bash-builtins_5.2.37-2_amd64.deb" \
+      "http://archive.debian.org/debian/pool/main/b/bash/bash-builtins_5.1-2+deb11u1_amd64.deb"
+  do
+    if curl -fsSL --connect-timeout 20 "$deb_url" -o /tmp/bash-builtins.deb; then
+      mkdir -p /tmp/bash-builtins-deb
+      # busybox/ar or rpm2cpio-like via bsdtar/python
+      if command -v bsdtar >/dev/null; then
+        bsdtar -C /tmp/bash-builtins-deb -xf /tmp/bash-builtins.deb
+        bsdtar -C /tmp/bash-builtins-deb -xf /tmp/bash-builtins-deb/data.tar.*
+      else
+        python3 - <<'PY'
+import tarfile, pathlib, subprocess, sys
+deb = pathlib.Path("/tmp/bash-builtins.deb")
+out = pathlib.Path("/tmp/bash-builtins-deb")
+out.mkdir(parents=True, exist_ok=True)
+subprocess.check_call(["ar", "x", str(deb)], cwd=out)
+for name in ("data.tar.xz", "data.tar.gz", "data.tar.zst", "data.tar"):
+    p = out / name
+    if p.exists():
+        with tarfile.open(p) as tf:
+            tf.extractall(out)
+        break
+else:
+    sys.exit("no data.tar in deb")
+PY
+      fi
+      if [[ -d /tmp/bash-builtins-deb/usr/include/bash ]]; then
+        cp -a /tmp/bash-builtins-deb/usr/include/bash /usr/include/
+        mkdir -p /usr/share/pkgconfig
+        cat > /usr/share/pkgconfig/bash.pc <<'EOF'
+prefix=/usr
+includedir=${prefix}/include
+Name: bash
+Description: Bash loadable builtin headers (from Debian bash-builtins)
+Version: 5.2
+Cflags: -I${includedir}/bash -I${includedir}/bash/include -I${includedir}/bash/builtins -DSHELL
+EOF
+        cp /usr/share/pkgconfig/bash.pc /usr/share/pkgconfig/bash-builtins.pc
+        echo "staged Debian bash-builtins headers from $deb_url"
+        break
+      fi
+    fi
+  done
+fi
+test -f /usr/include/bash/builtins.h
 
 # EL8: distro meson is often too old; install >=0.61 via pip AFTER dnf
 # (RPM_EXTRA may reinstall meson) and force /usr/bin/meson for rpmbuild.

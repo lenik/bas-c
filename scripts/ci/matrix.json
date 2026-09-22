@@ -4,8 +4,6 @@
     {"family": "debian", "release": "bullseye", "version": "11", "image": "arm64v8/debian:bullseye", "arch": "arm64", "platform": "linux/arm64"},
     {"family": "debian", "release": "bullseye", "version": "11", "image": "arm32v7/debian:bullseye", "arch": "armhf", "platform": "linux/arm/v7"},
     {"family": "debian", "release": "bullseye", "version": "11", "image": "i386/debian:bullseye", "arch": "i386", "platform": "linux/386"},
-    {"family": "debian", "release": "bullseye", "version": "11", "image": "ppc64le/debian:bullseye", "arch": "ppc64el", "platform": "linux/ppc64le"},
-    {"family": "debian", "release": "bullseye", "version": "11", "image": "s390x/debian:bullseye", "arch": "s390x", "platform": "linux/s390x"},
 
     {"family": "debian", "release": "bookworm", "version": "12", "image": "debian:bookworm", "arch": "amd64", "platform": "linux/amd64"},
     {"family": "debian", "release": "bookworm", "version": "12", "image": "arm64v8/debian:bookworm", "arch": "arm64", "platform": "linux/arm64"},

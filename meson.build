@@ -102,13 +102,33 @@ else
     ).stdout().strip() == 'yes'
 endif
 
+cc = meson.get_compiler('c')
 # Prefer get_variable() so Meson < 0.54 (no override_dependency) still works.
+# Headers: Debian bash-builtins.pc / RHEL rarely ships bash.pc; fall back to
+# plain -I/usr/include when <bash/builtins.h> is present (build-rpm may stage
+# headers from the GNU bash tarball). Windows often has neither → skip loadable.
 if have_bash_builtins_sub
     bash_builtins_sp = subproject('bash-builtins')
     bash_builtins_dep = bash_builtins_sp.get_variable('bash_builtins_dep')
 else
-    bash_builtins_dep = dependency('bash-builtins', required: true)
+    bash_builtins_dep = dependency('bash', required: false)
+    if not bash_builtins_dep.found()
+        bash_builtins_dep = dependency('bash-builtins', required: false)
+    endif
+    if not bash_builtins_dep.found() and cc.has_header('bash/builtins.h')
+        bash_builtins_dep = declare_dependency(
+            include_directories: include_directories(
+                '/usr/include',
+                '/usr/include/bash',
+                '/usr/include/bash/include',
+                '/usr/include/bash/builtins',
+                is_system: true,
+            ),
+            compile_args: ['-DSHELL'],
+        )
+    endif
 endif
+have_bash_loadable = bash_builtins_dep.found()
 
 if have_icu_config_sub
     icu_config_sp = subproject('icu-config')
@@ -243,16 +263,18 @@ if meson_has_override_dep
     meson.override_dependency('bas-c-static', bas_c_static_dep)
 endif
 
-# Bash loadable: libbas-bash (bb-util)
-bas_bash = shared_library(
-    'bas-bash',
-    'src/bas/bash/bb-util.c',
-    dependencies: [bash_builtins_dep, bas_c_dep],
-    include_directories: exe_inc,
-    version: meson.project_version(),
-    soversion: meson.project_version().split('.')[0],
-    install: true,
-)
+# Bash loadable: libbas-bash (bb-util) — needs bash loadable headers.
+if have_bash_loadable
+    bas_bash = shared_library(
+        'bas-bash',
+        'src/bas/bash/bb-util.c',
+        dependencies: [bash_builtins_dep, bas_c_dep],
+        include_directories: exe_inc,
+        version: meson.project_version(),
+        soversion: meson.project_version().split('.')[0],
+        install: true,
+    )
+endif
 
 # ---- pkg-config ----
 # Headers install to ${includedir}/bas/...; consumers use #include <bas/...>,

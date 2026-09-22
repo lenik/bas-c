@@ -235,6 +235,8 @@ jobs:
         shell: bash
         run: |
           chmod +x scripts/ci/*.sh scripts/ci/pack-nuget.py || true
+          # Git for Windows ships link.exe ahead of MSVC on PATH.
+          export PATH="$(printf '%s' "$PATH" | tr ':' '\n' | grep -viE 'Git[/\\]usr[/\\]bin' | paste -sd: -)"
           ./scripts/ci/build-ucrt.sh "${{ matrix.arch }}" "dist/ucrt-${{ matrix.arch }}"
       - name: Upload to GitHub Release
         shell: bash
