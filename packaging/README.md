@@ -18,6 +18,7 @@ Remote builds (`.config/bas-c/<packaging>.build-host`) are orchestrated by
 
 Win32 artifacts:
 
-- `win32/mingw/` → `<pkg>_mingw-<ver>.exe`
+- `win32/ucrt/` → `<pkg>_ucrt-<arch>-<ver>.zip` + `<pkg>.<ver>.nupkg` (native)
+- `win32/mingw/` → `<pkg>_mingw-<ver>.exe` + `<pkg>.gnu.<ver>.nupkg` (-gnu)
 - `win32/innosetup/` → `<pkg>-<ver>.exe`
 - `win32/wix/` → `<pkg>-<ver>.msi`

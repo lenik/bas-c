@@ -13,6 +13,8 @@ License:        AGPL-3.0-or-later
 URL:            https://github.com/lenik/bas-c
 Packager:       Lenik (谢继雷) <bas-c@bodz.net>
 Source0:        %{name}-%{srcversion}.tar.xz
+Patch0:         bash-prefer-bash-pc.patch
+# RPM-only: prefer bash.pc (RHEL) then bash-builtins.pc (Debian module name).
 
 BuildRequires:  meson
 BuildRequires:  ninja-build
@@ -26,8 +28,7 @@ BuildRequires:  zlib-devel
 BuildRequires:  libicu-devel
 BuildRequires:  gettext
 BuildRequires:  asciidoctor
-# Debian Build-Depends "bash-builtins" maps to bash (ships bash.pc);
-# CI aliases bash.pc → bash-builtins.pc for Meson.
+# Debian Build-Depends "bash-builtins" → bash (ships bash.pc); Patch0 teaches Meson.
 BuildRequires:  bash
 
 %description
@@ -35,7 +36,7 @@ Shared library providing base utilities: CLI (program/options), logging,
 process helpers, I/O, and bash loadable builtin support.
 
 %prep
-%setup -q -n %{name}-%{srcversion}
+%autosetup -n %{name}-%{srcversion} -p1
 
 %build
 meson setup build \
@@ -67,6 +68,9 @@ meson install -C build --destdir=%{buildroot}
 %{_datadir}/doc/libbas-c/
 
 %changelog
+* Sun Sep 20 2026 Lenik (谢继雷) <bas-c@bodz.net>
+- Apply packaging/rpm/*.patch via Patch0 + %autosetup (prefer bash.pc).
+
 * Sun Sep 20 2026 Lenik (谢继雷) <bas-c@bodz.net>
 - Use RHEL-style BuildRequires; ship libraries/headers in the RPM file list.
 - Drop circular libbas-c-dev BuildRequires.

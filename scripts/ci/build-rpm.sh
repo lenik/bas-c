@@ -3,7 +3,8 @@
 # Usage: build-rpm.sh <image> <platform> <el_release> <arch> [outdir]
 #
 # Debian Build-Depends → RPM package mapping (experiential):
-#   bash-builtins  → bash (ships bash.pc; we alias as bash-builtins.pc)
+#   bash-builtins  → bash (ships bash.pc; prefer packaging/rpm/*.patch + %patch
+#                    so Meson accepts bash.pc — do not mutate the container .pc)
 #   libglib2.0-dev → glib2-devel
 #   libcurl4-*-dev → libcurl-devel
 #   zlib1g-dev     → zlib-devel
@@ -31,7 +32,14 @@ if [ ! -f "$SPEC" ]; then
 fi
 
 STAGE=$(mktemp -d)
-trap 'rm -rf "$STAGE"' EXIT
+_cleanup_stage() {
+  # rpmbuild runs as root inside Docker; host rm cannot delete those files.
+  if [ -d "$STAGE" ]; then
+    docker run --rm -v "$STAGE:/work" alpine:3.20 sh -c 'rm -rf /work/*' >/dev/null 2>&1 || true
+    rm -rf "$STAGE" 2>/dev/null || true
+  fi
+}
+trap _cleanup_stage EXIT
 mkdir -p "$OUTDIR"
 OUTDIR=$(cd "$OUTDIR" && pwd)
 
@@ -47,6 +55,13 @@ tar -C "$ROOT" \
   --exclude='./ci-deps' \
   --transform "s,^\\./,${NAME}-${VERSION}/," \
   -cJf "$STAGE/SOURCES/${NAME}-${VERSION}.tar.xz" .
+
+# RPM-only patches: live in packaging/rpm/*.patch; applied via %patch/%autosetup.
+shopt -s nullglob
+for p in "$ROOT"/packaging/rpm/*.patch; do
+  cp -a "$p" "$STAGE/SOURCES/"
+done
+shopt -u nullglob
 
 {
   printf '%s\n' "%global version ${RPM_VERSION}" "%global srcversion ${VERSION}" ""
@@ -116,7 +131,7 @@ $PM -y install meson ninja-build 2>/dev/null \
 # Map Debian Build-Depends → RPM packages (experiential heuristics).
 map_deb_to_rpm() {
   case "$1" in
-    bash-builtins) echo bash ;;  # provides bash.pc; alias below
+    bash-builtins) echo bash ;;  # provides bash.pc; RPM-only %patch teaches Meson
     libglib2.0-dev|libglib2.0-0) echo glib2-devel ;;
     libcurl4-openssl-dev|libcurl4-gnutls-dev|libcurl4-nss-dev|libcurl-dev)
       echo libcurl-devel ;;
@@ -155,33 +170,18 @@ fi
 command -v meson >/dev/null
 command -v ninja >/dev/null || command -v ninja-build >/dev/null
 
-# Debian pkg-config module "bash-builtins" ← RHEL/Rocky package "bash" (bash.pc).
-ensure_bash_builtins_pc() {
-  export PKG_CONFIG_PATH="/usr/share/pkgconfig:/usr/lib64/pkgconfig:/usr/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
-  if pkg-config --exists bash-builtins 2>/dev/null; then
-    return 0
+# EL8: distro meson is often too old; install >=0.61 via pip AFTER dnf
+# (RPM_EXTRA may reinstall meson) and force /usr/bin/meson for rpmbuild.
+if [[ "${EL}" == "8" ]]; then
+  pip3 install --no-cache-dir "meson>=0.61,<1.5" || \
+    python3 -m pip install --no-cache-dir "meson>=0.61,<1.5"
+  pip_meson=$(command -v meson || true)
+  [ -x /usr/local/bin/meson ] && pip_meson=/usr/local/bin/meson
+  if [ -n "${pip_meson:-}" ] && [ -x "$pip_meson" ]; then
+    cp -a "$pip_meson" /usr/bin/meson
   fi
-  local pc dest=/usr/share/pkgconfig/bash-builtins.pc
-  mkdir -p /usr/share/pkgconfig
-  pc=$(find /usr -name bash.pc 2>/dev/null | head -n1 || true)
-  if [ -n "${pc:-}" ]; then
-    # Keep Cflags/Libs from bash.pc; rewrite Name so Meson finds bash-builtins.
-    sed "s/^Name:.*/Name: bash-builtins/" "$pc" >"$dest"
-    echo "build-rpm: aliased $pc -> $dest (bash provides bash-builtins)"
-  else
-    printf "%s\n" \
-      "prefix=/usr" \
-      "Name: bash-builtins" \
-      "Description: Bash loadable builtins (provided by bash)" \
-      "Version: 5.0" \
-      "Cflags: -I\${prefix}/include" \
-      >"$dest"
-    echo "build-rpm: wrote stub $dest (no bash.pc found)"
-  fi
-  pkg-config --exists bash-builtins
-}
-ensure_bash_builtins_pc
-export PKG_CONFIG_PATH="/usr/share/pkgconfig:/usr/lib64/pkgconfig:/usr/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+  meson --version
+fi
 
 rpmbuild --define "_topdir /rpmbuild" -bb /rpmbuild/SPECS/${NAME}.spec || \
   rpmbuild --define "_topdir /rpmbuild" --nodeps -bb /rpmbuild/SPECS/${NAME}.spec

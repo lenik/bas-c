@@ -2,7 +2,8 @@
 
 | Target | Directory | Host shell | Artifact |
 |--------|-----------|------------|----------|
-| mingw-w64 portable | `mingw/` | bash / MSYS | `<pkg>_mingw-<ver>.exe` |
+| UCRT native (MSVC) | `ucrt/` | **cmd / PowerShell / GHA** | `<pkg>_ucrt-<arch>-<ver>.zip` + nupkg |
+| mingw-w64 portable | `mingw/` | bash / MSYS | `<pkg>_mingw-<ver>.exe` + `.gnu` nupkg |
 | Inno Setup installer | `innosetup/` | **cmd.exe / PowerShell** | `<pkg>-<ver>.exe` |
 | WiX MSI | `wix/` | **cmd.exe / PowerShell** | `<pkg>-<ver>.msi` |
 

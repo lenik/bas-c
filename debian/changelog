@@ -1,3 +1,21 @@
+bas-c (1.1.5) stable; urgency=medium
+
+  * RPM: apply packaging/rpm/*.patch via PatchN + %autosetup (bash.pc).
+  * CI build-rpm: copy RPM-only patches to SOURCES; drop container .pc
+    alias.
+  * CI matrix: debian +i386/armhf/ppc64el/s390x; ubuntu amd64v3 (no
+    ubuntu i386 — no Docker Hub image).
+  * CI: drop cygwin; add win32 UCRT native builds (x64 + arm64).
+  * CI: mingw NuGet id uses .gnu suffix; publish to reponupkg_forgejo.
+  * CI: generate WinGet/Scoop (-gnu) + combined Choco manifests.
+  * CI publish-private: REPORPM :1993; REPONUPKG :2080 (not git :1544).
+  * CI build-deb: bullseye via snapshot.debian.org; loong64→sid;
+    amd64v3 rename; apt retry + meson pip on bullseye.
+  * CI build-rpm: docker cleanup for root-owned STAGE; EL8 meson pip.
+  * CI matrix: arch-specific images; verify all zips on release.
+
+ -- Lenik (谢继雷) <lenik@bodz.net>  Mon, 21 Sep 2026 17:14:22 +0800
+
 bas-c (1.1.4) stable; urgency=medium
 
   * aptly/CI: component main (not contrib).
