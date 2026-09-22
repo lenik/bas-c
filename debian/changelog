@@ -2,6 +2,7 @@ bas-c (1.1.6) unstable; urgency=medium
 
   * Move bb-util / libbas-bash into the bas-bash package.
   * Stop shipping libbas-bash.so and bas/bash headers from libbas-c.
+  * CI: drop bash-builtins staging/aliases and BuildRequires bash.
 
  -- Lenik (谢继雷) <lenik@bodz.net>  Tue, 22 Sep 2026 22:45:40 +0800
 

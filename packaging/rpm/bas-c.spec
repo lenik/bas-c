@@ -27,12 +27,10 @@ BuildRequires:  zlib-devel
 BuildRequires:  libicu-devel
 BuildRequires:  gettext
 BuildRequires:  asciidoctor
-# Debian Build-Depends "bash-builtins" → bash + staged headers (see build-rpm).
-BuildRequires:  bash
 
 %description
 Shared library providing base utilities: CLI (program/options), logging,
-process helpers, I/O, and bash loadable builtin support.
+process helpers, and I/O.
 
 %prep
 %autosetup -n %{name}-%{srcversion} -p1

@@ -168,7 +168,7 @@ fi
 # Peer -dev packages often Requires: glib/curl/zlib via .pc but omit -dev Depends.
 apt-get install -y -qq --no-install-recommends --fix-missing \
   "${_apt_extra[@]}" \
-  libglib2.0-dev libcurl4-openssl-dev zlib1g-dev libicu-dev bash-builtins \
+  libglib2.0-dev libcurl4-openssl-dev zlib1g-dev libicu-dev \
   libssl-dev pkg-config ninja-build meson asciidoctor 2>/dev/null || true
 if [ -f debian/control ]; then
   mk-build-deps -i -r -t "apt-get -y -qq --no-install-recommends --fix-missing ${_apt_extra[*]}" \
@@ -186,14 +186,6 @@ if [ "${BUILD_SUITE:-}" = "bullseye" ]; then
   export PATH="/usr/local/bin:$PATH"
   hash -r 2>/dev/null || true
   meson --version
-fi
-# Debian ships bash.pc; many projects expect the bash-builtins module name.
-if ! pkg-config --exists bash-builtins 2>/dev/null; then
-  pc=$(find /usr -name bash.pc 2>/dev/null | head -n1 || true)
-  if [ -n "${pc:-}" ]; then
-    mkdir -p /usr/share/pkgconfig
-    cp "$pc" /usr/share/pkgconfig/bash-builtins.pc
-  fi
 fi
 # Foreign / ISA-variant arches (e.g. amd64v3 on an amd64 image).
 native=$(dpkg --print-architecture 2>/dev/null || true)

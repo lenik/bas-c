@@ -27,7 +27,7 @@ Depends:
  ${misc:Depends},
 Description: C base library (runtime)
  Shared library providing base utilities: CLI (program/options), logging,
- process helpers, I/O, and bash loadable builtin support.
+ process helpers, and I/O.
 
 Package: libbas-c-dev
 Section: libdevel

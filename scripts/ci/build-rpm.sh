@@ -3,8 +3,6 @@
 # Usage: build-rpm.sh <image> <platform> <el_release> <arch> [outdir]
 #
 # Debian Build-Depends → RPM package mapping (experiential):
-#   bash-builtins  → bash (ships bash.pc; prefer packaging/rpm/*.patch + %patch
-#                    so Meson accepts bash.pc — do not mutate the container .pc)
 #   libglib2.0-dev → glib2-devel
 #   libcurl4-*-dev → libcurl-devel
 #   zlib1g-dev     → zlib-devel
@@ -122,8 +120,8 @@ if command -v dnf >/dev/null 2>&1; then
     $PM config-manager --set-enabled powertools 2>/dev/null || true
 fi
 $PM -y install rpm-build rpmdevtools pkgconf gcc gcc-c++ make \
-  tar xz which python3 python3-pip curl ca-certificates binutils \
-  openssl-devel zlib-devel bash || true
+  tar xz which python3 python3-pip curl ca-certificates \
+  openssl-devel zlib-devel || true
 # meson/ninja: distro packages (EPEL/CRB) or pip fallback.
 $PM -y install meson ninja-build 2>/dev/null \
   || pip3 install --no-cache-dir meson ninja
@@ -131,7 +129,6 @@ $PM -y install meson ninja-build 2>/dev/null \
 # Map Debian Build-Depends → RPM packages (experiential heuristics).
 map_deb_to_rpm() {
   case "$1" in
-    bash-builtins) echo bash ;;  # provides bash.pc; RPM-only %patch teaches Meson
     libglib2.0-dev|libglib2.0-0) echo glib2-devel ;;
     libcurl4-openssl-dev|libcurl4-gnutls-dev|libcurl4-nss-dev|libcurl-dev)
       echo libcurl-devel ;;
@@ -143,8 +140,8 @@ map_deb_to_rpm() {
     ninja-build) echo ninja-build ;;
     gettext|gettext-base) echo gettext ;;
     asciidoctor|ruby-asciidoctor) echo asciidoctor ;;
-    # packaging-only / skip
-    debhelper|debhelper-compat|dh-*|build-essential|fakeroot|equivs|dpkg-dev|devscripts) ;;
+    # packaging-only / skip (incl. former bash-builtins — now in bas-bash)
+    bash-builtins|bash|debhelper|debhelper-compat|dh-*|build-essential|fakeroot|equivs|dpkg-dev|devscripts) ;;
     *) ;;
   esac
 }
@@ -158,7 +155,7 @@ if [[ -f /rpmbuild/debian-build-deps.txt ]]; then
   done < /rpmbuild/debian-build-deps.txt
 fi
 # Always pull common C library -devel packages used by bas-c-like projects.
-RPM_EXTRA+=(glib2-devel libcurl-devel libicu-devel gettext asciidoctor bash)
+RPM_EXTRA+=(glib2-devel libcurl-devel libicu-devel gettext asciidoctor)
 # Unique
 mapfile -t RPM_EXTRA < <(printf "%s\n" "${RPM_EXTRA[@]}" | awk "NF && !seen[\$0]++")
 $PM -y install "${RPM_EXTRA[@]}" 2>/dev/null || true
@@ -169,59 +166,6 @@ if ls /rpmbuild/deps/*.rpm >/dev/null 2>&1; then
 fi
 command -v meson >/dev/null
 command -v ninja >/dev/null || command -v ninja-build >/dev/null
-
-# RHEL/Rocky bash RPM omits loadable headers; reuse Debian bash-builtins
-# include tree (headers are portable enough to compile libbas-bash).
-if [[ ! -f /usr/include/bash/builtins.h ]]; then
-  deb_url="http://deb.debian.org/debian/pool/main/b/bash/bash-builtins_5.2.37-2+b5_amd64.deb"
-  # Fallback candidates if the exact revision moves.
-  for deb_url in \
-      "http://deb.debian.org/debian/pool/main/b/bash/bash-builtins_5.2.15-2+b13_amd64.deb" \
-      "http://deb.debian.org/debian/pool/main/b/bash/bash-builtins_5.2.37-2_amd64.deb" \
-      "http://archive.debian.org/debian/pool/main/b/bash/bash-builtins_5.1-2+deb11u1_amd64.deb"
-  do
-    if curl -fsSL --connect-timeout 20 "$deb_url" -o /tmp/bash-builtins.deb; then
-      mkdir -p /tmp/bash-builtins-deb
-      # busybox/ar or rpm2cpio-like via bsdtar/python
-      if command -v bsdtar >/dev/null; then
-        bsdtar -C /tmp/bash-builtins-deb -xf /tmp/bash-builtins.deb
-        bsdtar -C /tmp/bash-builtins-deb -xf /tmp/bash-builtins-deb/data.tar.*
-      else
-        python3 - <<'PY'
-import tarfile, pathlib, subprocess, sys
-deb = pathlib.Path("/tmp/bash-builtins.deb")
-out = pathlib.Path("/tmp/bash-builtins-deb")
-out.mkdir(parents=True, exist_ok=True)
-subprocess.check_call(["ar", "x", str(deb)], cwd=out)
-for name in ("data.tar.xz", "data.tar.gz", "data.tar.zst", "data.tar"):
-    p = out / name
-    if p.exists():
-        with tarfile.open(p) as tf:
-            tf.extractall(out)
-        break
-else:
-    sys.exit("no data.tar in deb")
-PY
-      fi
-      if [[ -d /tmp/bash-builtins-deb/usr/include/bash ]]; then
-        cp -a /tmp/bash-builtins-deb/usr/include/bash /usr/include/
-        mkdir -p /usr/share/pkgconfig
-        cat > /usr/share/pkgconfig/bash.pc <<'EOF'
-prefix=/usr
-includedir=${prefix}/include
-Name: bash
-Description: Bash loadable builtin headers (from Debian bash-builtins)
-Version: 5.2
-Cflags: -I${includedir}/bash -I${includedir}/bash/include -I${includedir}/bash/builtins -DSHELL
-EOF
-        cp /usr/share/pkgconfig/bash.pc /usr/share/pkgconfig/bash-builtins.pc
-        echo "staged Debian bash-builtins headers from $deb_url"
-        break
-      fi
-    fi
-  done
-fi
-test -f /usr/include/bash/builtins.h
 
 # EL8: distro meson is often too old; install >=0.61 via pip AFTER dnf
 # (RPM_EXTRA may reinstall meson) and force /usr/bin/meson for rpmbuild.
